@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -688,10 +688,10 @@ model ArchiveMessage {
   senderJid  String?
   senderName String?
   type       String   @default("TEXT") // TEXT IMAGE VIDEO AUDIO DOCUMENT STICKER LOCATION CONTACT
-  text       String?  @db.LongText
-  timestamp  DateTime @db.DateTime(3)
+  text       String?  @db.Text
+  timestamp  DateTime
   quotedId   String?
-  raw        String?  @db.LongText // WAMessage JSON, only for media (needed to download it later)
+  raw        String?  @db.Text // WAMessage JSON, only for media (needed to download it later)
   mediaState String   @default("none") // none | pending | saved | skipped | unavailable | error
   mediaFile  String?  // path inside the chat folder, e.g. audios/<file>
   mediaMime  String?
@@ -766,7 +766,7 @@ model CrmLead {
   campaignName    String?
   adSetName       String?
   adName          String?
-  notes           String?      @db.LongText
+  notes           String?      @db.Text
   tags            String?
   customFields    Json?
   order           Int          @default(0)
@@ -791,7 +791,7 @@ model CrmLeadActivity {
   userId    String?
   type      String   // STAGE_CHANGE, NOTE, WHATSAPP_MSG, STATUS_CHANGE, WEBHOOK_IN
   title     String
-  content   String?  @db.LongText
+  content   String?  @db.Text
   metadata  Json?
   createdAt DateTime @default(now())
 

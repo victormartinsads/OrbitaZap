@@ -49,6 +49,8 @@ model User {
   webhooks  Webhook[]
   notifications Notification[]
   sessionAccesses SessionAccess[]
+  crmPipelines    CrmPipeline[]
+  crmLeads        CrmLead[]
 }
 
 model Session {
@@ -702,3 +704,119 @@ model ArchiveMessage {
   @@index([chatId, timestamp, id])
   @@index([sessionId, mediaState])
 }
+
+// ==========================================
+// CRM & KANBAN MODULE
+// ==========================================
+
+model CrmPipeline {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?  @db.Text
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stages      CrmPipelineStage[]
+  leads       CrmLead[]
+
+  @@index([userId])
+}
+
+model CrmPipelineStage {
+  id          String   @id @default(cuid())
+  pipelineId  String
+  name        String
+  color       String   @default("#00bfa5")
+  order       Int      @default(0)
+  isWon       Boolean  @default(false)
+  isLost      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pipeline    CrmPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  leads       CrmLead[]
+
+  @@index([pipelineId, order])
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model CrmLead {
+  id              String       @id @default(cuid())
+  userId          String
+  pipelineId      String
+  stageId         String
+  name            String
+  phone           String?
+  remoteJid       String?
+  email           String?
+  company         String?
+  jobTitle        String?
+  value           Decimal      @default(0.00) @db.Decimal(12, 2)
+  priority        LeadPriority @default(MEDIUM)
+  source          String       @default("MANUAL") // META_ADS, GOOGLE_SHEETS, WEBHOOK, WHATSAPP, MANUAL
+  campaignName    String?
+  adSetName       String?
+  adName          String?
+  notes           String?      @db.LongText
+  tags            String?
+  customFields    Json?
+  order           Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pipeline        CrmPipeline        @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  stage           CrmPipelineStage   @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  activities      CrmLeadActivity[]
+
+  @@index([userId])
+  @@index([pipelineId, stageId])
+  @@index([phone])
+  @@index([remoteJid])
+  @@index([createdAt])
+}
+
+model CrmLeadActivity {
+  id        String   @id @default(cuid())
+  leadId    String
+  userId    String?
+  type      String   // STAGE_CHANGE, NOTE, WHATSAPP_MSG, STATUS_CHANGE, WEBHOOK_IN
+  title     String
+  content   String?  @db.LongText
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  lead      CrmLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt])
+}
+
+model CrmIntegrationConfig {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String   // META_ADS, GOOGLE_SHEETS, WEBHOOK
+  name              String
+  webhookToken      String   @unique @default(cuid())
+  verifyToken       String?
+  accessToken       String?  @db.Text
+  targetPipelineId  String?
+  targetStageId     String?
+  autoTriggerFlowId String?
+  autoAssignTag     String?
+  config            Json?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId, provider])
+}
+

@@ -5,10 +5,15 @@ import { logger } from "@/lib/logger";
 import { toOggOpus } from "@/modules/whatsapp/voice";
 import { renderBroadcast } from "./template";
 
-// The interval is a pace, not a ban shield. 2 s is the floor: faster bursts are what WhatsApp flags first.
+// The interval is a pace with humanized jitter to prevent algorithmic WhatsApp spam bans.
 export const MIN_INTERVAL_MS = 2_000;
 export const MAX_INTERVAL_MS = 60 * 60_000;
-export const clampInterval = (ms: number) => Math.min(MAX_INTERVAL_MS, Math.max(MIN_INTERVAL_MS, Math.round(ms || 0)));
+export const clampInterval = (ms: number) => {
+    const base = Math.min(MAX_INTERVAL_MS, Math.max(MIN_INTERVAL_MS, Math.round(ms || 0)));
+    // Anti-bloqueio humanizado: variacao aleatoria inteligente (+/- 25% + 1 a 3 segundos) para evitar padrao de robo
+    const jitter = Math.floor(Math.random() * (base * 0.25)) + Math.floor(Math.random() * 2000) + 1000;
+    return base + jitter;
+};
 
 const g = global as unknown as { __broadcastRunning?: Set<string> };
 const running = (g.__broadcastRunning ??= new Set());

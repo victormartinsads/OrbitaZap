@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Workflow } from "lucide-react";
 import {
     LayoutDashboard,
     MessageSquare,
@@ -14,20 +13,15 @@ import {
     Webhook,
     CalendarClock,
     Bot,
-    Bell,
-    FileText,
-    Code,
-    Send,
     UserCheck,
     Megaphone,
-    HardDrive,
     Activity,
-    UserCircle,
     Tag,
     MessageCircleReply,
-    Contact,
     UserPlus,
-    DatabaseBackup
+    DatabaseBackup,
+    Workflow,
+    Kanban
 } from "lucide-react";
 import { useSidebar } from "./sidebar-context";
 import {
@@ -53,65 +47,38 @@ interface NavItem {
 
 export const navGroups: NavGroup[] = [
     {
-        label: "Principal",
+        label: "Menu",
         items: [
-            { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
-            { href: "/dashboard/sessions", label: "Sessões / QR", icon: QrCode },
-        ],
-    },
-    {
-        label: "Mensagens",
-        items: [
+            { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
+            { href: "/dashboard/crm", label: "CRM & Funis", icon: Kanban },
             { href: "/dashboard/chat", label: "Conversas", icon: MessageSquare },
-            { href: "/dashboard/broadcast", label: "Transmissão", icon: Megaphone },
-            { href: "/dashboard/sticker", label: "Criador de figurinhas", icon: ImageIcon },
-            { href: "/dashboard/archive", label: "Exportar conversas", icon: DatabaseBackup },
-        ],
-    },
-    {
-        label: "Contatos",
-        items: [
+            { href: "/dashboard/flows", label: "Fluxos", icon: Workflow },
             { href: "/dashboard/contacts", label: "Contatos", icon: UserCheck },
             { href: "/dashboard/groups", label: "Grupos", icon: Users },
-            { href: "/dashboard/labels", label: "Etiquetas", icon: Tag },
+            { href: "/dashboard/broadcast", label: "Transmissão", icon: Megaphone },
         ],
     },
     {
         label: "Automação",
         items: [
-            { href: "/dashboard/flows", label: "Fluxos de conversa", icon: Workflow },
-            { href: "/dashboard/bot-settings", label: "Configurações do bot", icon: Bot },
-            { href: "/dashboard/autoreply", label: "Resposta automática", icon: MessageCircleReply },
-            { href: "/dashboard/profile", label: "Perfil do bot", icon: UserCircle },
-            { href: "/dashboard/scheduler", label: "Agendador", icon: CalendarClock },
-            { href: "/dashboard/webhooks", label: "Webhooks & API", icon: Webhook },
+            { href: "/dashboard/quick-replies", label: "Respostas Rápidas", icon: MessageCircleReply },
+            { href: "/dashboard/autoreply", label: "Auto Resposta", icon: Bot },
+            { href: "/dashboard/scheduler", label: "Agendamentos", icon: CalendarClock },
+            { href: "/dashboard/labels", label: "Etiquetas", icon: Tag },
         ],
     },
     {
-        label: "Desenvolvedor",
+        label: "Sistema",
         items: [
-            { href: "/docs", label: "Documentação da API", icon: FileText },
-            { href: "/swagger", label: "Swagger UI", icon: Code, external: true },
-        ],
-    },
-    {
-        label: "Administração",
-        items: [
-            { href: "/dashboard/media", label: "Gerenciador de mídia", icon: HardDrive },
-            { href: "/dashboard/sessions/access", label: "Acesso às sessões", icon: UserPlus },
-            { href: "/dashboard/users", label: "Usuários", icon: Users, superadminOnly: true },
             { href: "/dashboard/settings", label: "Configurações", icon: Settings },
-            { href: "/dashboard/system-monitor", label: "Monitor do sistema", icon: Activity, superadminOnly: true },
-            { href: "/dashboard/notifications", label: "Notificações", icon: Bell, superadminOnly: true },
         ],
     },
 ];
 
 export function SidebarNav() {
     const pathname = usePathname();
-    const { data: session } = useSession();
     const { isCollapsed } = useSidebar();
-    // @ts-ignore
+    const { data: session } = useSession();
     const userRole = session?.user?.role;
 
     const isActive = (href: string) => {
@@ -121,7 +88,7 @@ export function SidebarNav() {
 
     return (
         <TooltipProvider delayDuration={0}>
-            <nav className="flex-1 px-4 pb-4 overflow-y-auto overflow-x-hidden space-y-0.5 sidebar-scrollbar">
+            <nav className="flex-1 px-2.5 pb-2 overflow-y-auto overflow-x-hidden space-y-3 sidebar-scrollbar">
                 {navGroups.map((group) => {
                     const visibleItems = group.items.filter((item) => {
                         if (item.superadminOnly && userRole !== "SUPERADMIN") return false;
@@ -130,46 +97,24 @@ export function SidebarNav() {
                     });
                     if (visibleItems.length === 0) return null;
 
-                    // Grupo "Principal" doesn't show a collapsible header
-                    if (group.label === "Principal") {
-                        return (
-                            <div key={group.label} className="mb-1">
-                                {visibleItems.map((item) => (
-                                    <NavLink
-                                        key={item.href}
-                                        item={item}
-                                        active={isActive(item.href)}
-                                        isCollapsed={isCollapsed}
-                                    />
-                                ))}
-                            </div>
-                        );
-                    }
-
                     return (
-                        <div key={group.label} className="mb-1">
-                            {/* Group header — hidden when sidebar collapsed */}
+                        <div key={group.label} className="space-y-0.5">
                             {!isCollapsed && (
-                                <p className="px-4 pb-2 pt-5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8A9591]">{group.label}</p>
+                                <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">{group.label}</p>
                             )}
 
-                            {/* Collapsed sidebar: show a thin divider between groups */}
                             {isCollapsed && (
-                                <div className="mx-3 my-3 border-t border-white/[0.07]" />
+                                <div className="mx-2 my-1.5 border-t border-slate-200" />
                             )}
 
-                            {(
-                                <div className="space-y-0.5">
-                                    {visibleItems.map((item) => (
-                                        <NavLink
-                                            key={item.href}
-                                            item={item}
-                                            active={isActive(item.href)}
-                                            isCollapsed={isCollapsed}
-                                        />
-                                    ))}
-                                </div>
-                            )}
+                            {visibleItems.map((item) => (
+                                <NavLink
+                                    key={item.href}
+                                    item={item}
+                                    active={isActive(item.href)}
+                                    isCollapsed={isCollapsed}
+                                />
+                            ))}
                         </div>
                     );
                 })}
@@ -186,19 +131,19 @@ function NavLink({ item, active, isCollapsed }: { item: NavItem; active: boolean
             href={item.href}
             target={item.external ? "_blank" : undefined}
             className={`
-                flex items-center rounded-lg text-[15px]
-                transition-all duration-200 group relative
-                ${isCollapsed ? "justify-center px-2 py-2.5" : "gap-4 px-4 py-2.5"}
+                flex items-center rounded-xl text-[13px] font-medium
+                transition-all duration-150 group relative
+                ${isCollapsed ? "justify-center p-2" : "gap-2.5 px-3 py-1.5"}
                 ${active
-                    ? "bg-[#14452E] text-white font-medium"
-                    : "text-[#C9D1CE] hover:bg-white/[0.06] hover:text-white"
+                    ? "bg-[#00bcfe]/12 text-[#0084cc] font-semibold"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }
             `}
         >
             <Icon
-                size={isCollapsed ? 21 : 20}
-                strokeWidth={1.6}
-                className={`flex-shrink-0 transition-colors duration-200 ${active ? "text-[#3BE38C]" : "text-[#AEB8B4] group-hover:text-white"}`}
+                size={16}
+                strokeWidth={active ? 2.2 : 1.8}
+                className={`flex-shrink-0 transition-colors ${active ? "text-[#00bcfe]" : "text-slate-400 group-hover:text-slate-700"}`}
             />
             {!isCollapsed && <span className="truncate">{item.label}</span>}
         </Link>
@@ -210,8 +155,8 @@ function NavLink({ item, active, isCollapsed }: { item: NavItem; active: boolean
                 <TooltipTrigger asChild>
                     {linkContent}
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>
-                    <p className="text-xs font-medium">{item.label}</p>
+                <TooltipContent side="right" sideOffset={10} className="bg-white border border-slate-200 text-slate-800 rounded-lg px-2.5 py-1 text-xs font-semibold shadow-md">
+                    {item.label}
                 </TooltipContent>
             </Tooltip>
         );

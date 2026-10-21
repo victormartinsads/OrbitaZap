@@ -23,9 +23,9 @@ interface AudienceItem { jid: string; name: string; phone: string; labels: { id:
 interface Label { id: string; name: string; colorHex: string; count: number }
 interface Attachment { id: string; name: string; mime: string }
 
-const MIN_INTERVAL_S = 2; // server floor (src/modules/broadcast/runner.ts)
+const MIN_INTERVAL_S = 10; // Piso de seguranca anti-bloqueio humanizado recomendavel para campanhas
 const EMOJIS = ["😀", "😁", "😂", "😊", "😍", "🥰", "😉", "😎", "🤩", "🙏", "👍", "👏", "🙌", "💪", "🎉", "🔥", "✨", "❤️", "💚", "✅", "📢", "📣", "🛍️", "💰", "🎁", "📅", "⏰", "📍", "👉", "⭐"];
-const green = "bg-[#0E8A4F] text-white hover:bg-[#0B7442]";
+const green = "bg-[#00bcfe] text-white hover:bg-[#0084cc]";
 
 export function formatDuration(totalSeconds: number) {
     const s = Math.max(0, Math.round(totalSeconds));
@@ -260,14 +260,14 @@ export function NewBroadcast({ sessionId, draft, onStarted, onDraftSaved }: {
                     <section className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
                         <div className="flex flex-wrap items-center gap-2">
                             <h2 className="text-lg font-semibold">Destinatários</h2>
-                            <span className="rounded-full bg-[#E7F6EE] px-2.5 py-0.5 text-xs font-semibold text-[#0E8A4F]">{recipients.length} {recipients.length === 1 ? "selecionado" : "selecionados"}</span>
+                            <span className="rounded-full bg-[#e0f2fe] px-2.5 py-0.5 text-xs font-semibold text-[#00bcfe]">{recipients.length} {recipients.length === 1 ? "selecionado" : "selecionados"}</span>
                         </div>
                         <p className="mt-0.5 text-sm text-muted-foreground">Escolha os contatos que receberão esta transmissão.</p>
 
                         <div className="mt-3 flex gap-1 border-b border-border/80">
                             {([["contacts", "Selecionar contatos"], ["file", "Importar arquivo"], ["paste", "Colar números"]] as const).map(([k, l]) => (
                                 <button key={k} type="button" onClick={() => setTab(k)} aria-pressed={tab === k}
-                                    className={cn("-mb-px border-b-2 px-3 pb-2 text-sm font-medium transition", tab === k ? "border-[#0E8A4F] text-[#0E8A4F]" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                                    className={cn("-mb-px border-b-2 px-3 pb-2 text-sm font-medium transition", tab === k ? "border-[#00bcfe] text-[#00bcfe]" : "border-transparent text-muted-foreground hover:text-foreground")}>
                                     {l}{k === "file" && imported ? ` (${imported.phones.length})` : k === "paste" && pastedPhones.length ? ` (${pastedPhones.length})` : ""}
                                 </button>
                             ))}
@@ -339,7 +339,7 @@ export function NewBroadcast({ sessionId, draft, onStarted, onDraftSaved }: {
                                         ))}
                                         {items.length < total && !audienceError && (
                                             <button type="button" onClick={() => { setLoadingAudience(true); setPage(p => p + 1); }} disabled={loadingAudience}
-                                                className="flex w-full items-center justify-center gap-2 border-t border-border/70 py-2.5 text-sm text-[#0E8A4F] hover:bg-muted/40">
+                                                className="flex w-full items-center justify-center gap-2 border-t border-border/70 py-2.5 text-sm text-[#00bcfe] hover:bg-muted/40">
                                                 {loadingAudience && <Loader2 className="h-4 w-4 animate-spin" />}Carregar mais ({total - items.length} restantes)
                                             </button>
                                         )}
@@ -348,7 +348,7 @@ export function NewBroadcast({ sessionId, draft, onStarted, onDraftSaved }: {
                                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                                     <span className="text-muted-foreground">
                                         <b className="text-foreground">{Object.keys(contacts).length}</b> contatos selecionados
-                                        {total > 0 && Object.keys(contacts).length < total && <> · <button type="button" onClick={selectAllResults} className="text-[#0E8A4F] hover:underline">Selecionar todos os {total} resultados</button></>}
+                                        {total > 0 && Object.keys(contacts).length < total && <> · <button type="button" onClick={selectAllResults} className="text-[#00bcfe] hover:underline">Selecionar todos os {total} resultados</button></>}
                                     </span>
                                     {recipients.length > 0 && <button type="button" onClick={clearSelection} className="flex items-center gap-1 font-medium text-destructive hover:underline"><Trash2 className="h-4 w-4" />Limpar seleção</button>}
                                 </div>
@@ -357,8 +357,8 @@ export function NewBroadcast({ sessionId, draft, onStarted, onDraftSaved }: {
 
                         {tab === "file" && (
                             <div className="mt-3 space-y-3">
-                                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-center text-sm hover:border-[#0E8A4F]">
-                                    <Upload className="h-6 w-6 text-[#0E8A4F]" />
+                                <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-center text-sm hover:border-[#00bcfe]">
+                                    <Upload className="h-6 w-6 text-[#00bcfe]" />
                                     <span className="font-medium">Escolher arquivo CSV ou TXT</span>
                                     <span className="text-xs text-muted-foreground">Um número por linha ou separados por vírgula, com DDI e DDD (ex.: 5521999998888)</span>
                                     <input type="file" accept=".csv,.txt,text/csv,text/plain" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
@@ -385,7 +385,7 @@ export function NewBroadcast({ sessionId, draft, onStarted, onDraftSaved }: {
                     <section className="grid gap-5 rounded-xl border border-border/80 bg-card p-5 shadow-sm md:grid-cols-[1fr_auto_minmax(0,0.8fr)]">
                         <div className="space-y-3">
                             <div className="flex items-start gap-2.5">
-                                <ShieldCheck className="mt-0.5 h-5 w-5 text-[#0E8A4F]" />
+                                <ShieldCheck className="mt-0.5 h-5 w-5 text-[#00bcfe]" />
                                 <div><h3 className="font-semibold">Controle de envio</h3><p className="text-xs text-muted-foreground">Defina o intervalo entre as mensagens</p></div>
                             </div>
                             <p className="text-sm font-medium">Intervalo entre mensagens</p>
@@ -402,7 +402,7 @@ export function NewBroadcast({ sessionId, draft, onStarted, onDraftSaved }: {
                                     <option value="seconds">Segundos</option><option value="minutes">Minutos</option>
                                 </select>
                             </div>
-                            <p className="flex items-center gap-2 rounded-lg bg-[#E7F6EE] px-3 py-1.5 text-sm font-medium text-[#0E8A4F]"><Clock className="h-4 w-4" />Enviar 1 mensagem a cada {intervalText}</p>
+                            <p className="flex items-center gap-2 rounded-lg bg-[#e0f2fe] px-3 py-1.5 text-sm font-medium text-[#00bcfe]"><Clock className="h-4 w-4" />Enviar 1 mensagem a cada {intervalText}</p>
                             <p className="text-xs text-muted-foreground">{belowFloor ? `Mínimo de ${MIN_INTERVAL_S} segundos entre mensagens.` : "Escolha segundos ou minutos."} Duração estimada: <b>{estimate === "—" ? "—" : `≈ ${estimate}`}</b></p>
                             <label className="flex items-center gap-2 text-sm"><Checkbox checked={pauseOnFailure} onCheckedChange={v => setPauseOnFailure(v === true)} />Pausar em caso de falha</label>
                             <label className="flex items-center gap-2 text-sm"><Checkbox checked={skipOptedOut} onCheckedChange={v => setSkipOptedOut(v === true)} />Excluir contatos descadastrados</label>
@@ -532,7 +532,7 @@ function Step({ n, title, text, state }: { n: number; title: string; text: strin
     return (
         <li className="flex items-center gap-3">
             <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-                state === "todo" ? "border border-border bg-muted text-muted-foreground" : "bg-[#0E8A4F] text-white")}>
+                state === "todo" ? "border border-border bg-muted text-muted-foreground" : "bg-[#00bcfe] text-white")}>
                 {state === "done" ? <Check className="h-4 w-4" /> : n}
             </span>
             <span><span className="block text-sm font-semibold">{title}</span><span className="block text-xs text-muted-foreground">{text}</span></span>
@@ -543,8 +543,8 @@ function Step({ n, title, text, state }: { n: number; title: string; text: strin
 function Radio({ checked, onSelect, title, text }: { checked: boolean; onSelect: () => void; title: string; text: string }) {
     return (
         <button type="button" role="radio" aria-checked={checked} onClick={onSelect} className="flex w-full items-start gap-3 text-left focus-visible:outline-none">
-            <span className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2", checked ? "border-[#0E8A4F]" : "border-border")}>
-                {checked && <span className="h-2.5 w-2.5 rounded-full bg-[#0E8A4F]" />}
+            <span className={cn("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2", checked ? "border-[#00bcfe]" : "border-border")}>
+                {checked && <span className="h-2.5 w-2.5 rounded-full bg-[#00bcfe]" />}
             </span>
             <span><span className="block text-sm font-medium">{title}</span><span className="block text-xs text-muted-foreground">{text}</span></span>
         </button>
@@ -554,7 +554,7 @@ function Radio({ checked, onSelect, title, text }: { checked: boolean; onSelect:
 function Summary({ icon: Icon, title, text }: { icon: typeof Users; title: string; text: string }) {
     return (
         <div className="flex min-w-0 items-center gap-3 md:border-r md:border-border md:pr-4">
-            <Icon className="h-6 w-6 shrink-0 text-[#0E8A4F]" />
+            <Icon className="h-6 w-6 shrink-0 text-[#00bcfe]" />
             <span className="min-w-0"><span className="block truncate text-sm font-semibold">{title}</span><span className="block truncate text-xs text-muted-foreground">{text}</span></span>
         </div>
     );

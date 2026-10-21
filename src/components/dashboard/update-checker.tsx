@@ -5,22 +5,23 @@ import { useEffect } from "react";
 export function UpdateChecker() {
     useEffect(() => {
         const checkUpdates = async () => {
-            try {
-                // Determine if we should check. Maybe check localStorage to avoid spamming every reload?
-                // User said "setiap kali ada yang masuk dashboard", implying every time or session start.
-                // Let's use sessionStorage to check once per browser tab session, or just fire it every time since backend handles deduplication.
-                // Backend deduplication is robust (checks DB). So firing every time is fine and meets requirements.
+            // Evitar chamadas redundantes: checar no máximo uma vez a cada 1 hora por navegador
+            const lastCheck = localStorage.getItem("marcflow_last_update_check");
+            const now = Date.now();
+            if (lastCheck && now - parseInt(lastCheck, 10) < 3600000) {
+                return;
+            }
 
+            try {
                 const res = await fetch('/api/system/check-updates', { method: 'POST' });
-                const json = await res.json();
-                console.log("UpdateChecker: Result", json);
+                localStorage.setItem("marcflow_last_update_check", now.toString());
             } catch (error) {
-                console.error("UpdateChecker: Failed", error);
+                // Silently ignore offline or failed checks
             }
         };
 
         checkUpdates();
     }, []);
 
-    return null; // Invisible component
+    return null;
 }

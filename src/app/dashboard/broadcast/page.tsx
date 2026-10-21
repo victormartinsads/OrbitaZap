@@ -24,12 +24,12 @@ interface Log {
 
 const STATUS: Record<Status, { label: string; className: string }> = {
     scheduled: { label: "Agendada", className: "bg-sky-500/10 text-sky-700" },
-    running: { label: "Em andamento", className: "bg-[#E7F6EE] text-[#0E8A4F]" },
+    running: { label: "Em andamento", className: "bg-[#e0f2fe] text-[#00bcfe]" },
     paused: { label: "Pausada", className: "bg-amber-500/10 text-amber-700" },
     completed: { label: "Concluída", className: "bg-muted text-foreground/80" },
     cancelled: { label: "Cancelada", className: "bg-muted text-muted-foreground" },
 };
-const green = "bg-[#0E8A4F] text-white hover:bg-[#0B7442]";
+const green = "bg-[#00bcfe] text-white hover:bg-[#0084cc]";
 const formatJid = (jid: string) => jid.replace("@s.whatsapp.net", "").replace("@lid", " (LID)").replace("@g.us", " (grupo)");
 const formatTime = (ts: string) => new Date(ts).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
@@ -107,7 +107,7 @@ function BroadcastView({ sessionId }: { sessionId: string }) {
             <div className="flex w-fit gap-1 rounded-xl border border-border/80 bg-card p-1 shadow-sm">
                 {([["new", "Nova transmissão", Send], ["drafts", "Rascunhos", FileText], ["history", "Histórico", History]] as const).map(([k, l, Icon]) => (
                     <button key={k} type="button" onClick={() => setTab(k)} aria-pressed={tab === k}
-                        className={cn("flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition", tab === k ? "bg-background text-[#0E8A4F] shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground")}>
+                        className={cn("flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition", tab === k ? "bg-background text-[#00bcfe] shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground")}>
                         <Icon className="h-4 w-4" />{l}{k === "drafts" && drafts?.length ? <span className="text-xs text-muted-foreground">({drafts.length})</span> : null}
                     </button>
                 ))}
@@ -163,7 +163,7 @@ function BroadcastView({ sessionId }: { sessionId: string }) {
                                     <div className="min-w-0 flex-1">
                                         <p className="flex items-center gap-2"><span className="truncate font-medium">{log.name || log.message || "Sem nome"}</span><span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS[log.status]?.className)}>{STATUS[log.status]?.label ?? log.status}</span></p>
                                         <p className="mt-0.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                                            <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-[#0E8A4F]" />{log.sent}</span>
+                                            <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-[#00bcfe]" />{log.sent}</span>
                                             <span className="flex items-center gap-1"><XCircle className="h-3 w-3 text-destructive" />{log.failed}</span>
                                             <span>{log.total} destinatários</span>
                                             <span>{log.status === "scheduled" && log.scheduledAt ? `agendada para ${formatTime(log.scheduledAt)}` : formatTime(log.startedAt)}</span>
@@ -192,7 +192,7 @@ function BroadcastView({ sessionId }: { sessionId: string }) {
                             <DialogDescription>{STATUS[detail.status]?.label} · {detail.total} destinatários · 1 mensagem a cada {formatDuration(detail.delay / 1000)}</DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-3 gap-2 text-center">
-                            <Stat value={detail.sent} label="Enviadas" className="text-[#0E8A4F]" />
+                            <Stat value={detail.sent} label="Enviadas" className="text-[#00bcfe]" />
                             <Stat value={detail.failed} label="Falhas" className="text-destructive" />
                             <Stat value={detail.total - detail.sent - detail.failed} label="Pendentes / ignoradas" />
                         </div>
@@ -203,7 +203,7 @@ function BroadcastView({ sessionId }: { sessionId: string }) {
                                     <span className="truncate font-mono">{formatJid(r.jid)}</span>
                                     <span className="flex shrink-0 items-center gap-2">
                                         {r.error && <span className="max-w-[220px] truncate text-destructive" title={r.error}>{r.error}</span>}
-                                        <span className={cn("rounded px-1.5 py-0.5 font-medium", r.status === "sent" ? "bg-[#E7F6EE] text-[#0E8A4F]" : r.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
+                                        <span className={cn("rounded px-1.5 py-0.5 font-medium", r.status === "sent" ? "bg-[#e0f2fe] text-[#00bcfe]" : r.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>
                                             {({ sent: "enviada", failed: "falhou", pending: "pendente", skipped: "ignorada" } as Record<string, string>)[r.status] ?? r.status}
                                         </span>
                                     </span>
@@ -223,7 +223,7 @@ function LiveCard({ p, busy, onControl, onClose }: { p: Progress; busy: boolean;
     const remaining = Math.max(0, p.total - done);
     const open = p.status === "running" || p.status === "paused";
     return (
-        <section className={cn("rounded-xl border p-4 shadow-sm", p.status === "paused" ? "border-amber-300/70 bg-amber-50/60 dark:bg-amber-500/5" : open ? "border-[#0E8A4F]/30 bg-[#F4FBF7] dark:bg-[#0E8A4F]/5" : "border-border bg-card")}>
+        <section className={cn("rounded-xl border p-4 shadow-sm", p.status === "paused" ? "border-amber-300/70 bg-amber-50/60 dark:bg-amber-500/5" : open ? "border-[#00bcfe]/30 bg-[#F4FBF7] dark:bg-[#00bcfe]/5" : "border-border bg-card")}>
             <div className="flex flex-wrap items-center gap-3">
                 <StatusIcon status={p.status} failed={p.failed} />
                 <div className="min-w-0 flex-1">
@@ -247,11 +247,11 @@ function LiveCard({ p, busy, onControl, onClose }: { p: Progress; busy: boolean;
 
 function StatusIcon({ status, failed }: { status: Status; failed: number }) {
     const c = "h-8 w-8 shrink-0";
-    if (status === "running") return <Radio className={cn(c, "animate-pulse text-[#0E8A4F]")} />;
+    if (status === "running") return <Radio className={cn(c, "animate-pulse text-[#00bcfe]")} />;
     if (status === "paused") return <Pause className={cn(c, "text-amber-500")} />;
     if (status === "scheduled") return <CalendarClock className={cn(c, "text-sky-600")} />;
     if (status === "cancelled") return <Square className={cn(c, "text-muted-foreground")} />;
-    return failed ? <AlertTriangle className={cn(c, "text-amber-500")} /> : <CheckCircle2 className={cn(c, "text-[#0E8A4F]")} />;
+    return failed ? <AlertTriangle className={cn(c, "text-amber-500")} /> : <CheckCircle2 className={cn(c, "text-[#00bcfe]")} />;
 }
 
 function Stat({ value, label, className }: { value: number; label: string; className?: string }) {

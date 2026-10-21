@@ -490,7 +490,8 @@ async function processAndSaveMessage(
     let fileUrl: string | null = null;
     // While an "Importar e exportar conversas" run has media switched off, history sync keeps only audio:
     // the archive holds the raw message and can fetch the rest later
-    const skipHeavyMedia = fromHistory && archiveMediaPolicy(sessionId) === false && messageType !== "AUDIO";
+    const skipGroupMedia = process.env.SKIP_GROUP_MEDIA_DOWNLOAD === "true" && remoteJid.includes("@g.us");
+    const skipHeavyMedia = (fromHistory && archiveMediaPolicy(sessionId) === false && messageType !== "AUDIO") || skipGroupMedia;
     try {
         if (!skipHeavyMedia) fileUrl = await downloadAndSaveMedia(msg, sessionId);
     } catch (e) {

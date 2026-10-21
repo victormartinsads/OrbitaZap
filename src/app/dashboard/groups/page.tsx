@@ -163,7 +163,7 @@ function GroupsView({ sessionId }: { sessionId: string }) {
                     <Button variant="outline" onClick={reload} disabled={refreshing} className="h-10 flex-1 rounded-xl bg-card sm:flex-none">
                         <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} /> Atualizar
                     </Button>
-                    <Button onClick={() => setCreateOpen(true)} className="h-10 flex-1 rounded-xl bg-[#0E8A4F] text-white hover:bg-[#0B7442] sm:flex-none">
+                    <Button onClick={() => setCreateOpen(true)} className="h-10 flex-1 rounded-xl bg-[#00bcfe] text-white hover:bg-[#0084cc] sm:flex-none">
                         <Plus className="h-4 w-4" /> Criar grupo
                     </Button>
                 </div>
@@ -230,14 +230,14 @@ function GroupsView({ sessionId }: { sessionId: string }) {
             {/* Selection toolbar */}
             {!!groups?.length && !!shown.length && (
                 <div className={cn("sticky top-0 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3 py-2 text-sm shadow-sm transition",
-                    selecting ? "border-[#0E8A4F]/30 bg-[#F1FAF5]" : "border-border/80 bg-card")}>
+                    selecting ? "border-[#00bcfe]/30 bg-[#F1FAF5]" : "border-border/80 bg-card")}>
                     <label className="flex cursor-pointer items-center gap-2">
                         <Checkbox checked={allShownSelected ? true : selecting ? "indeterminate" : false} aria-label="Selecionar todos os grupos exibidos"
                             onCheckedChange={() => (allShownSelected ? clearSelection() : selectAllShown())} />
                         {selecting ? <span className="font-medium">{selectedShown.length} {selectedShown.length === 1 ? "selecionado" : "selecionados"}</span>
                             : <span className="text-muted-foreground">Selecionar todos os {shown.length} exibidos</span>}
                     </label>
-                    {selecting && !allShownSelected && <button type="button" onClick={selectAllShown} className="text-[#0E8A4F] hover:underline">Selecionar todos os {shown.length} exibidos</button>}
+                    {selecting && !allShownSelected && <button type="button" onClick={selectAllShown} className="text-[#00bcfe] hover:underline">Selecionar todos os {shown.length} exibidos</button>}
                     {hiddenSelected > 0 && (
                         <span className="text-xs text-muted-foreground">+{hiddenSelected} ocultos pelo filtro (não serão afetados) ·{" "}
                             <button type="button" className="underline" onClick={() => setSelected(new Set(selectedShown.map(g => g.jid)))}>descartar</button></span>
@@ -272,7 +272,7 @@ function GroupsView({ sessionId }: { sessionId: string }) {
                         <div key={g.jid} role="button" tabIndex={0} aria-label={selecting ? `Selecionar ${groupName(g)}` : `Abrir conversa de ${groupName(g)}`}
                             onClick={() => activate(g)} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); activate(g); } }}
                             className={cn("relative flex min-w-0 cursor-pointer items-center gap-4 rounded-xl border bg-card p-4 pl-11 shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                selected.has(g.jid) ? "border-[#0E8A4F]/50 bg-[#F6FCF9] ring-1 ring-[#0E8A4F]/30" : "border-border/80 hover:border-border")}>
+                                selected.has(g.jid) ? "border-[#00bcfe]/50 bg-[#F6FCF9] ring-1 ring-[#00bcfe]/30" : "border-border/80 hover:border-border")}>
                             <span className="absolute left-3.5 top-1/2 -translate-y-1/2" onClick={e => e.stopPropagation()}>
                                 <Checkbox checked={selected.has(g.jid)} onCheckedChange={() => toggle(g.jid)} aria-label={`Selecionar ${groupName(g)}`} />
                             </span>
@@ -281,7 +281,7 @@ function GroupsView({ sessionId }: { sessionId: string }) {
                                 <h3 title={groupName(g)} className={cn("line-clamp-2 break-words text-[16px] font-semibold leading-snug", !g.subject?.trim() && "text-muted-foreground")}>{groupName(g)}</h3>
                                 <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
                                     {participantCount(g)} {participantCount(g) === 1 ? "participante" : "participantes"}
-                                    {g.meAdmin && <span className="inline-flex items-center gap-0.5 text-[#0E8A4F]"><ShieldCheck className="h-3.5 w-3.5" />Admin</span>}
+                                    {g.meAdmin && <span className="inline-flex items-center gap-0.5 text-[#00bcfe]"><ShieldCheck className="h-3.5 w-3.5" />Admin</span>}
                                 </p>
                                 <CategoryBadge category={catOf(g)} />
                             </div>
@@ -310,7 +310,7 @@ function GroupsView({ sessionId }: { sessionId: string }) {
                                             <button type="button" onClick={() => activate(g)} title={selecting ? "Selecionar" : "Abrir conversa"} className="flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                                 <GroupAvatar sessionId={sessionId} group={g} className="h-10 w-10 text-sm" />
                                                 <span title={groupName(g)} className={cn("line-clamp-2 max-w-[380px] break-words font-medium", !g.subject?.trim() && "text-muted-foreground")}>{groupName(g)}</span>
-                                                {g.meAdmin && <ShieldCheck className="h-4 w-4 shrink-0 text-[#0E8A4F]" aria-label="Admin" />}
+                                                {g.meAdmin && <ShieldCheck className="h-4 w-4 shrink-0 text-[#00bcfe]" aria-label="Admin" />}
                                             </button>
                                         </td>
                                         <td className="px-4 py-2.5 text-muted-foreground">{participantCount(g)}</td>
@@ -460,7 +460,7 @@ function CreateGroupDialog({ sessionId, onClose, onCreated }: { sessionId: strin
                 </form>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose} disabled={busy}>Cancelar</Button>
-                    <Button onClick={create} disabled={busy || !name.trim()} className="bg-[#0E8A4F] text-white hover:bg-[#0B7442]">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Criar grupo</Button>
+                    <Button onClick={create} disabled={busy || !name.trim()} className="bg-[#00bcfe] text-white hover:bg-[#0084cc]">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Criar grupo</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

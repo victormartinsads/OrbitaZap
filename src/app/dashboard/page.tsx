@@ -1,19 +1,15 @@
 import { prisma } from "@/lib/prisma";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
     Plus,
     Wifi,
-    WifiOff,
     MessageSquare,
-    Bot,
-    Send,
-    Settings,
-    QrCode,
-    ArrowRight,
+    ArrowUpRight,
     Activity,
     Zap,
+    Send,
+    Users,
 } from "lucide-react";
 
 import { auth } from "@/lib/auth";
@@ -32,10 +28,7 @@ export default async function DashboardPage() {
 
     const totalSessions = sessions.length;
     const connectedSessions = sessions.filter(s => s.status === 'CONNECTED').length;
-    const disconnectedSessions = totalSessions - connectedSessions; // Anything not connected is disconnected
-    const otherSessions = 0;
 
-    // Fetch auto-reply count for accessible sessions
     let autoReplyCount = 0;
     try {
         const sessionIds = sessions.map(s => s.sessionId);
@@ -45,167 +38,176 @@ export default async function DashboardPage() {
             });
         }
     } catch {
-        // If auto-reply table doesn't exist yet, just show 0
+        // Fallback
     }
 
-    const stats = [
-        {
-            title: "Total de sessões",
-            value: totalSessions,
-            icon: QrCode,
-            description: "Sessões cadastradas",
-            color: "text-blue-600",
-            bg: "bg-blue-50",
-        },
-        {
-            title: "Conectadas",
-            value: connectedSessions,
-            icon: Wifi,
-            description: "Online e prontas",
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
-        },
-        {
-            title: "Desconectadas",
-            value: disconnectedSessions,
-            icon: WifiOff,
-            description: "Precisam reconectar",
-            color: "text-red-500",
-            bg: "bg-red-50",
-        },
-        {
-            title: "Regras de resposta automática",
-            value: autoReplyCount,
-            icon: Zap,
-            description: "Automações ativas",
-            color: "text-amber-600",
-            bg: "bg-amber-50",
-        },
-    ];
-
-    const quickActions = [
-        { href: "/dashboard/sessions", label: "Nova sessão", icon: Plus, description: "Conectar um novo dispositivo" },
-        { href: "/dashboard/chat", label: "Enviar mensagem", icon: Send, description: "Abrir as conversas" },
-        { href: "/dashboard/bot-settings", label: "Configurações do bot", icon: Bot, description: "Configurar o chatbot" },
-        { href: "/dashboard/system-monitor", label: "Monitor do sistema", icon: Activity, description: "Ver métricas do servidor" },
-    ];
+    let totalMessages = 0;
+    try {
+        const sessionIds = sessions.map(s => s.id);
+        if (sessionIds.length > 0) {
+            totalMessages = await prisma.message.count({
+                where: { sessionId: { in: sessionIds } }
+            });
+        }
+    } catch {
+        // Fallback
+    }
 
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="space-y-6 max-w-6xl mx-auto pb-12">
+            {/* Header Limpo */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
                 <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Painel</h2>
-                    <p className="text-sm text-slate-500 mt-1">Visão geral do seu gateway de WhatsApp</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                        Visão Geral
+                    </h1>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Acompanhe o status das suas conexões e atalhos rápidos.
+                    </p>
                 </div>
-                <Link href="/dashboard/sessions">
-                    <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" /> Adicionar sessão
-                    </Button>
-                </Link>
-            </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat) => {
-                    const Icon = stat.icon;
-                    return (
-                        <Card key={stat.title} className="glass-panel border-border/50 shadow-sm hover:shadow-md hover:shadow-primary/5 transition-all duration-300">
-                            <CardContent className="p-4 sm:p-5">
-                                <div className="flex items-start justify-between">
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.title}</p>
-                                        <p className="text-2xl sm:text-3xl font-extrabold text-foreground">{stat.value}</p>
-                                        <p className="text-xs text-muted-foreground/70">{stat.description}</p>
-                                    </div>
-                                    <div className={`${stat.bg} p-2.5 rounded-xl border object-contain border-white/20 dark:border-white/10 shadow-sm`}>
-                                        <Icon className={`h-5 w-5 ${stat.color}`} />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
-
-            {/* Quick Actions */}
-            <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Ações rápidas</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    {quickActions.map((action) => {
-                        const Icon = action.icon;
-                        return (
-                            <Link key={action.href} href={action.href}>
-                                <Card className="glass-panel border-border/50 shadow-sm hover:shadow-md hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer h-full">
-                                    <CardContent className="p-4 flex items-center gap-3">
-                                        <div className="bg-muted/50 p-2.5 rounded-xl group-hover:bg-primary transition-colors border border-border/50 shadow-sm">
-                                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary-foreground transition-colors" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-foreground truncate">{action.label}</p>
-                                            <p className="text-xs text-muted-foreground/80 truncate">{action.description}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Sessions List */}
-            <div>
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Sessões</h3>
-                    <Link href="/dashboard/sessions" className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors">
-                        Ver todas <ArrowRight size={14} />
+                <div className="flex items-center gap-2.5">
+                    <Link href="/dashboard/chat">
+                        <Button className="rounded-full shadow-xs">
+                            <MessageSquare size={14} /> Abrir Conversas
+                        </Button>
+                    </Link>
+                    <Link href="/dashboard/sessions">
+                        <Button variant="outline" className="rounded-full">
+                            <Plus size={14} /> Nova Conexão
+                        </Button>
                     </Link>
                 </div>
+            </div>
 
-                {sessions.length === 0 ? (
-                    <Card className="border-dashed border-2 border-slate-200 shadow-none">
-                        <CardContent className="py-12 text-center">
-                            <div className="bg-slate-100 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <QrCode className="h-6 w-6 text-slate-400" />
-                            </div>
-                            <p className="text-sm font-medium text-slate-600 mb-1">Nenhuma sessão ainda</p>
-                            <p className="text-xs text-slate-400 mb-4">Conecte seu primeiro dispositivo WhatsApp para começar</p>
-                            <Link href="/dashboard/sessions">
-                                <Button size="sm" variant="outline" className="gap-2">
-                                    <Plus className="h-4 w-4" /> Criar sessão
-                                </Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {sessions.map(s => {
-                            const isConnected = s.status === 'CONNECTED';
-                            const isDisconnected = !isConnected;
-
-                            return (
-                                <Link key={s.id} href={`/dashboard/sessions/${s.sessionId}`}>
-                                    <Card className="glass-panel border-border/50 shadow-sm hover:shadow-md hover:shadow-primary/5 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full">
-                                        <CardContent className="p-4">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-bold text-foreground truncate">{s.name}</p>
-                                                    <p className="text-xs text-muted-foreground font-mono truncate mt-1">{s.sessionId}</p>
-                                                </div>
-                                                <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full flex-shrink-0
-                                                    ${isConnected ? 'bg-emerald-50 text-emerald-700' : isDisconnected ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}
-                                                `}>
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : isDisconnected ? 'bg-red-400' : 'bg-amber-400'}`} />
-                                                    {s.status}
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            );
-                        })}
+            {/* Cards de Métricas em Branco com Bordas Finas */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs hover:border-[#00bcfe]/40 transition-colors">
+                    <div className="flex items-center justify-between text-slate-500">
+                        <span className="text-xs font-medium">WhatsApp Conectado</span>
+                        <div className={`h-2.5 w-2.5 rounded-full ${connectedSessions > 0 ? "bg-[#00bcfe]" : "bg-red-500"}`} />
                     </div>
-                )}
+                    <div className="mt-2 text-2xl font-bold text-slate-900">
+                        {connectedSessions} <span className="text-xs font-normal text-slate-400">/ {totalSessions}</span>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs hover:border-[#00bcfe]/40 transition-colors">
+                    <div className="flex items-center justify-between text-slate-500">
+                        <span className="text-xs font-medium">Status do Sistema</span>
+                        <Wifi size={14} className={connectedSessions > 0 ? "text-[#00bcfe]" : "text-slate-400"} />
+                    </div>
+                    <div className="mt-2 text-base font-bold text-slate-900">
+                        {connectedSessions > 0 ? "Operacional" : "Offline"}
+                    </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs hover:border-[#00bcfe]/40 transition-colors">
+                    <div className="flex items-center justify-between text-slate-500">
+                        <span className="text-xs font-medium">Mensagens</span>
+                        <Activity size={14} className="text-slate-400" />
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-slate-900">
+                        {totalMessages.toLocaleString('pt-BR')}
+                    </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs hover:border-[#00bcfe]/40 transition-colors">
+                    <div className="flex items-center justify-between text-slate-500">
+                        <span className="text-xs font-medium">Respostas Automáticas</span>
+                        <Zap size={14} className="text-slate-400" />
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-slate-900">
+                        {autoReplyCount}
+                    </div>
+                </div>
+            </div>
+
+            {/* Sessões e Atalhos em Branco e Cinza Claro */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Active Sessions List */}
+                <div className="lg:col-span-2 rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                        <h2 className="text-sm font-bold text-slate-900">Sessões WhatsApp</h2>
+                        <Link href="/dashboard/sessions" className="text-xs font-semibold text-[#00bcfe] hover:underline inline-flex items-center gap-1">
+                            Gerenciar <ArrowUpRight size={13} />
+                        </Link>
+                    </div>
+
+                    <div className="space-y-2">
+                        {sessions.length === 0 ? (
+                            <div className="text-center py-8 text-xs text-slate-400">
+                                Nenhuma sessão conectada no momento.
+                            </div>
+                        ) : (
+                            sessions.map((s) => (
+                                <div
+                                    key={s.id}
+                                    className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-2.5 h-2.5 rounded-full ${s.status === "CONNECTED" ? "bg-[#00bcfe]" : "bg-red-500"}`} />
+                                        <div>
+                                            <div className="font-semibold text-xs text-slate-900">{s.name}</div>
+                                            <div className="text-[10px] text-slate-400 font-mono">{s.sessionId}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
+                                            s.status === "CONNECTED"
+                                                ? "bg-[#00bcfe]/12 text-[#0084cc]"
+                                                : "bg-red-50 text-red-600"
+                                        }`}>
+                                            {s.status === "CONNECTED" ? "Conectado" : s.status}
+                                        </span>
+                                        <Link href="/dashboard/chat">
+                                            <Button size="sm" variant="ghost" className="h-7 text-xs rounded-full px-2.5 text-slate-600">
+                                                Abrir
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Minimal Shortcut Actions */}
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs">
+                    <h2 className="text-sm font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100">
+                        Navegação Direta
+                    </h2>
+                    <div className="space-y-1.5">
+                        <Link href="/dashboard/flows" className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-xs text-slate-800 transition-colors">
+                            <span className="flex items-center gap-2.5 font-medium">
+                                <Zap size={14} className="text-[#00bcfe]" /> Fluxos Automáticos
+                            </span>
+                            <ArrowUpRight size={13} className="text-slate-400" />
+                        </Link>
+
+                        <Link href="/dashboard/broadcast" className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-xs text-slate-800 transition-colors">
+                            <span className="flex items-center gap-2.5 font-medium">
+                                <Send size={14} className="text-[#00bcfe]" /> Campanhas e Transmissão
+                            </span>
+                            <ArrowUpRight size={13} className="text-slate-400" />
+                        </Link>
+
+                        <Link href="/dashboard/contacts" className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-xs text-slate-800 transition-colors">
+                            <span className="flex items-center gap-2.5 font-medium">
+                                <Users size={14} className="text-[#00bcfe]" /> Contatos e Grupos
+                            </span>
+                            <ArrowUpRight size={13} className="text-slate-400" />
+                        </Link>
+
+                        <Link href="/dashboard/archive" className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-xs text-slate-800 transition-colors">
+                            <span className="flex items-center gap-2.5 font-medium">
+                                <MessageSquare size={14} className="text-[#00bcfe]" /> Exportação de Histórico
+                            </span>
+                            <ArrowUpRight size={13} className="text-slate-400" />
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
     );

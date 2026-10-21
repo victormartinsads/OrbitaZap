@@ -33,21 +33,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             const res = await fetch('/api/sessions');
             if (res.ok) {
                 const responseData = await res.json();
-                const data = responseData?.data || [];
-                // Filter connected only? Or showing all but disabled?
-                // Logic: Only show CONNECTED in selector for "Active" operations.
-                // Show all sessions so users can manage disconnected ones (e.g. webhooks, settings)
+                const data: Session[] = responseData?.data || [];
                 setSessions(data);
 
-                // Sync with cookie
+                // Prioritize connected sessions
+                const connected = data.filter((s: Session) => s.status === "CONNECTED");
+                const targetPool = connected.length > 0 ? connected : data;
+
+                // Sync with cookie or auto-select
                 const cookieId = getCookie("sessionId");
                 if (cookieId && data.find((s: Session) => s.sessionId === cookieId)) {
                     setSessionIdState(cookieId);
-                } else if (data.length > 0) {
-                    // Default to first
-                    const first = data[0].sessionId;
-                    setSessionIdState(first);
-                    setCookie("sessionId", first);
+                } else if (targetPool.length > 0) {
+                    const chosen = targetPool[0].sessionId;
+                    setSessionIdState(chosen);
+                    setCookie("sessionId", chosen);
                 } else {
                     setSessionIdState("");
                 }

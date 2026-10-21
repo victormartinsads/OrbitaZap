@@ -1,39 +1,68 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Save, AlertCircle } from "lucide-react";
+import {
+    RefreshCw,
+    Save,
+    AlertCircle,
+    Settings,
+    QrCode,
+    Webhook,
+    Users,
+    Activity,
+    DatabaseBackup,
+    ImageIcon,
+    Bot
+} from "lucide-react";
 import { toast } from "sonner";
 
-export default function SettingsPage() {
+import { SessionManager } from "@/components/dashboard/session-manager";
+import ArchivePage from "../archive/page";
+import StickerPage from "../sticker/page";
+import WebhooksPage from "../webhooks/page";
+import UsersPage from "../users/page";
+import SystemMonitorPage from "../system-monitor/page";
+import BotSettingsPage from "../bot-settings/page";
+
+type TabKey = "general" | "bot" | "sessions" | "webhooks" | "archive" | "stickers" | "users" | "metrics";
+
+function SettingsContent() {
     const { data: authSession } = useSession();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const isSuperAdmin = (authSession?.user as any)?.role === "SUPERADMIN";
+
+    const currentTab = (searchParams.get("tab") as TabKey) || "general";
+
+    const setTab = (tab: TabKey) => {
+        router.push(`/dashboard/settings?tab=${tab}`);
+    };
 
     const [systemConfig, setSystemConfig] = useState({
         appName: "MarcFlow",
         logoUrl: "",
-        timezone: "Asia/Jakarta",
+        timezone: "America/Sao_Paulo",
         enableRegistration: true
     });
     const [systemLoading, setSystemLoading] = useState(false);
-    const [timezones, setTimezones] = useState<string[]>(["UTC", "Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"]);
+    const [timezones, setTimezones] = useState<string[]>(["UTC", "America/Sao_Paulo", "Asia/Jakarta"]);
 
     useEffect(() => {
         try {
             if (typeof Intl !== "undefined" && Intl.supportedValuesOf) {
                 const list = Intl.supportedValuesOf("timeZone");
-                if (!list.includes("UTC")) {
-                    list.push("UTC");
-                }
+                if (!list.includes("UTC")) list.push("UTC");
                 list.sort();
                 setTimezones(list);
             }
         } catch (e) {
-            console.error("Failed to load timezones dynamically", e);
+            console.error("Failed to load timezones", e);
         }
     }, []);
 
@@ -46,9 +75,7 @@ export default function SettingsPage() {
                     setSystemConfig({
                         appName: data.appName || "MarcFlow",
                         logoUrl: data.logoUrl || "",
-                        // @ts-ignore
-                        faviconUrl: data.faviconUrl || "/favicon.ico",
-                        timezone: data.timezone || "Asia/Jakarta",
+                        timezone: data.timezone || "America/Sao_Paulo",
                         enableRegistration: data.enableRegistration !== undefined ? data.enableRegistration : true
                     });
                 }
@@ -71,156 +98,159 @@ export default function SettingsPage() {
                 toast.error("Falha ao atualizar as configurações do sistema");
             }
         } catch (e) {
-            console.error(e);
             toast.error("Erro ao salvar as configurações do sistema");
         } finally {
             setSystemLoading(false);
         }
     };
 
-    const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00bcfe] disabled:cursor-not-allowed disabled:opacity-50";
+
+    const tabs: { key: TabKey; label: string; icon: any; superadminOnly?: boolean }[] = [
+        { key: "general", label: "Geral", icon: Settings },
+        { key: "bot", label: "Comportamento Bot", icon: Bot },
+        { key: "sessions", label: "Conexão WhatsApp", icon: QrCode },
+        { key: "webhooks", label: "Webhooks", icon: Webhook },
+        { key: "archive", label: "Exportar Histórico", icon: DatabaseBackup },
+        { key: "stickers", label: "Figurinhas", icon: ImageIcon },
+        { key: "users", label: "Equipe", icon: Users, superadminOnly: true },
+        { key: "metrics", label: "Métricas", icon: Activity, superadminOnly: true },
+    ];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div>
-                <h2 className="text-xl sm:text-3xl font-bold tracking-tight">Configurações</h2>
-                <p className="text-muted-foreground text-sm mt-1">Configuração global do sistema. Somente SuperAdmins podem fazer alterações.</p>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Configurações</h1>
+                <p className="text-slate-500 text-sm mt-1">
+                    Central de configurações de conexões, integrações, equipe, histórico e preferências do sistema.
+                </p>
             </div>
 
-            {!isSuperAdmin && (
-                <Card className="border-yellow-200 bg-yellow-50">
-                    <CardContent className="pt-6">
-                        <div className="flex items-start gap-3">
-                            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                            <div>
-                                <p className="text-sm font-medium text-yellow-900">Modo somente leitura</p>
-                                <p className="text-xs text-yellow-700 mt-1">
-                                    Somente Superadmins podem alterar as configurações do sistema. Você pode ver as configurações atuais, mas não pode alterá-las.
-                                </p>
+            {/* Navigation Tabs Bar */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80">
+                {tabs.map((tab) => {
+                    if (tab.superadminOnly && !isSuperAdmin) return null;
+                    const Icon = tab.icon;
+                    const active = currentTab === tab.key;
+                    return (
+                        <button
+                            key={tab.key}
+                            onClick={() => setTab(tab.key)}
+                            className={`
+                                flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
+                                transition-all duration-150
+                                ${active
+                                    ? "bg-white text-slate-900 shadow-sm border border-slate-200/70"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                                }
+                            `}
+                        >
+                            <Icon size={15} className={active ? "text-[#00bcfe]" : "text-slate-400"} />
+                            <span>{tab.label}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Tab Contents */}
+            {currentTab === "general" && (
+                <div className="space-y-6">
+                    {!isSuperAdmin && (
+                        <Card className="border-yellow-200 bg-yellow-50">
+                            <CardContent className="pt-6">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-yellow-900">Modo somente leitura</p>
+                                        <p className="text-xs text-yellow-700 mt-1">
+                                            Somente Superadmins podem alterar as configurações do sistema. Você pode ver as configurações atuais, mas não pode alterá-las.
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card className="bg-white border-slate-200 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-bold text-slate-800">Identidade da Ferramenta</CardTitle>
+                            <CardDescription className="text-slate-500 text-xs">Nome da plataforma, logo e fuso horário.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="grid gap-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">Nome da Plataforma</Label>
+                                    <input
+                                        className={inputClass}
+                                        placeholder="MarcFlow"
+                                        value={systemConfig.appName}
+                                        onChange={(e) => setSystemConfig(prev => ({ ...prev, appName: e.target.value }))}
+                                        disabled={!isSuperAdmin}
+                                    />
+                                    <p className="text-[11px] text-slate-400">Exibido na barra de navegação e abas.</p>
+                                </div>
+
+                                <div className="grid gap-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">Fuso Horário Padrão</Label>
+                                    <select
+                                        className={inputClass}
+                                        value={systemConfig.timezone}
+                                        onChange={(e) => setSystemConfig(prev => ({ ...prev, timezone: e.target.value }))}
+                                        disabled={!isSuperAdmin}
+                                    >
+                                        {timezones.map((tz) => (
+                                            <option key={tz} value={tz}>
+                                                {tz}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[11px] text-slate-400">Fuso utilizado para envios programados e logs.</p>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+
+                            <div className="flex items-center justify-between space-x-2 pt-3 border-t border-slate-100">
+                                <Label htmlFor="enable-registration" className="flex flex-col space-y-0.5">
+                                    <span className="text-xs font-semibold text-slate-800">Permitir cadastro público de usuários</span>
+                                    <span className="font-normal text-[11px] text-slate-400">Deixe desativado para manter a ferramenta privada e restrita a convites.</span>
+                                </Label>
+                                <Switch
+                                    id="enable-registration"
+                                    checked={systemConfig.enableRegistration}
+                                    onCheckedChange={c => setSystemConfig(prev => ({ ...prev, enableRegistration: c }))}
+                                    disabled={!isSuperAdmin}
+                                />
+                            </div>
+
+                            <div className="pt-2">
+                                <Button
+                                    onClick={handleSaveSystem}
+                                    disabled={systemLoading || !isSuperAdmin}
+                                    className="bg-[#00bcfe] hover:bg-[#0084cc] text-white text-xs font-semibold rounded-xl h-9"
+                                >
+                                    {systemLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-2" /> : <Save className="h-3.5 w-3.5 mr-2" />}
+                                    Salvar Alterações
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             )}
 
-            {/* System Configuration (Global) */}
-            <Card className="border-primary/20 bg-primary/5">
-                <CardHeader>
-                    <CardTitle className="text-xl">Configuração do aplicativo</CardTitle>
-                    <CardDescription>Configurações globais de identidade visual e controle de acesso do aplicativo.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label>Nome do aplicativo</Label>
-                            <input
-                                className={inputClass}
-                                placeholder="MarcFlow"
-                                value={systemConfig.appName}
-                                onChange={(e) => setSystemConfig(prev => ({ ...prev, appName: e.target.value }))}
-                                disabled={!isSuperAdmin}
-                            />
-                            <p className="text-xs text-muted-foreground">Altera o nome na barra lateral e no título do navegador.</p>
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label>Fuso horário</Label>
-                            <select
-                                className={inputClass}
-                                value={systemConfig.timezone}
-                                onChange={(e) => setSystemConfig(prev => ({ ...prev, timezone: e.target.value }))}
-                                disabled={!isSuperAdmin}
-                            >
-                                {timezones.map((tz) => (
-                                    <option key={tz} value={tz}>
-                                        {tz}
-                                    </option>
-                                ))}
-                            </select>
-                            <p className="text-xs text-muted-foreground">O Agendador usará este fuso horário.</p>
-                        </div>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label>URL do logo</Label>
-                            <input
-                                className={inputClass}
-                                placeholder="https://example.com/logo.png"
-                                value={systemConfig.logoUrl}
-                                onChange={(e) => setSystemConfig(prev => ({ ...prev, logoUrl: e.target.value }))}
-                                disabled={!isSuperAdmin}
-                            />
-                            <p className="text-xs text-muted-foreground">URL do logo principal do painel.</p>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label>URL do favicon</Label>
-                            <input
-                                className={inputClass}
-                                placeholder="/favicon.ico"
-                                value={(systemConfig as any).faviconUrl || ""}
-                                onChange={(e) => setSystemConfig(prev => ({ ...prev, faviconUrl: e.target.value }))}
-                                disabled={!isSuperAdmin}
-                            />
-                            <p className="text-xs text-muted-foreground">URL do ícone da aba do navegador.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between space-x-2 pt-2 border-t border-border/50">
-                        <Label htmlFor="enable-registration" className="flex flex-col space-y-1">
-                            <span>Habilitar cadastro de usuários</span>
-                            <span className="font-normal text-xs text-muted-foreground">Permite que novos usuários criem contas. Desative para manter a plataforma privada.</span>
-                        </Label>
-                        <Switch
-                            id="enable-registration"
-                            checked={systemConfig.enableRegistration}
-                            onCheckedChange={c => setSystemConfig(prev => ({ ...prev, enableRegistration: c }))}
-                            disabled={!isSuperAdmin}
-                        />
-                    </div>
-
-                    <div className="pt-2">
-                        <Button onClick={handleSaveSystem} disabled={systemLoading || !isSuperAdmin}>
-                            {systemLoading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            Salvar configuração
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* System Updates */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Atualizações do sistema</CardTitle>
-                    <CardDescription>Verifique a versão mais recente no GitHub.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={async () => {
-                            setSystemLoading(true);
-                            try {
-                                const res = await fetch("/api/system/check-updates", { method: "POST" });
-                                const data = await res.json();
-                                if (data.status) {
-                                    toast.success(data.message || "Verificação concluída!");
-                                } else {
-                                    toast.error(data.message || "Falha ao verificar atualizações");
-                                }
-                            } catch (e) {
-                                toast.error("Erro ao verificar atualizações");
-                            } finally {
-                                setSystemLoading(false);
-                            }
-                        }}
-                        disabled={systemLoading}
-                    >
-                        <RefreshCw className={`mr-2 h-4 w-4 ${systemLoading ? 'animate-spin' : ''}`} />
-                        Verificar atualizações
-                    </Button>
-                </CardContent>
-            </Card>
+            {currentTab === "bot" && <BotSettingsPage />}
+            {currentTab === "sessions" && <SessionManager user={authSession?.user} />}
+            {currentTab === "webhooks" && <WebhooksPage />}
+            {currentTab === "archive" && <ArchivePage />}
+            {currentTab === "stickers" && <StickerPage />}
+            {currentTab === "users" && isSuperAdmin && <UsersPage />}
+            {currentTab === "metrics" && isSuperAdmin && <SystemMonitorPage />}
         </div>
+    );
+}
+
+export default function SettingsPage() {
+    return (
+        <Suspense fallback={<div className="p-6 text-sm text-slate-500">Carregando configurações...</div>}>
+            <SettingsContent />
+        </Suspense>
     );
 }

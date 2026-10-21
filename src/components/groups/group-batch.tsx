@@ -57,14 +57,14 @@ function ProgressBar({ done, total, verb }: { done: number; total: number; verb:
     return (
         <div className="space-y-1.5" role="status" aria-live="polite">
             <p className="text-sm font-medium">{verb} {Math.min(done + 1, total)} de {total} {total === 1 ? "grupo" : "grupos"}…</p>
-            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-[#0E8A4F] transition-all" style={{ width: `${(done / total) * 100}%` }} /></div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-[#00bcfe] transition-all" style={{ width: `${(done / total) * 100}%` }} /></div>
         </div>
     );
 }
 
 function ResultsList({ groups, results }: { groups: GroupRow[]; results: Record<string, ItemResult> }) {
     const icon = (s: Status) =>
-        s === "ok" ? <CheckCircle2 className="h-4 w-4 text-[#0E8A4F]" /> :
+        s === "ok" ? <CheckCircle2 className="h-4 w-4 text-[#00bcfe]" /> :
         s === "error" ? <XCircle className="h-4 w-4 text-destructive" /> :
         s === "skipped" ? <CircleSlash className="h-4 w-4 text-amber-600" /> :
         s === "running" ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> :
@@ -92,7 +92,7 @@ function Summary({ groups, results }: { groups: GroupRow[]; results: Record<stri
     const ok = count("ok"), err = count("error"), skip = count("skipped");
     return (
         <p className="text-sm">
-            <span className="font-medium text-[#0E8A4F]">{ok} concluído{ok === 1 ? "" : "s"}</span>
+            <span className="font-medium text-[#00bcfe]">{ok} concluído{ok === 1 ? "" : "s"}</span>
             {err > 0 && <> · <span className="font-medium text-destructive">{err} com falha</span></>}
             {skip > 0 && <> · <span className="font-medium text-amber-700">{skip} ignorado{skip === 1 ? "" : "s"}</span></>}
         </p>
@@ -126,8 +126,8 @@ export function BatchCategoryDialog({ sessionId, groups, categories, onClose, on
     };
     const option = (id: string | null, label: React.ReactNode) => (
         <button key={id ?? "none"} type="button" role="radio" aria-checked={selected === id} onClick={() => setSelected(id)}
-            className={cn("flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", selected === id && "bg-[#E7F6EE]")}>
-            {label}{selected === id && <Check className="h-4 w-4 text-[#0E8A4F]" />}
+            className={cn("flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", selected === id && "bg-[#e0f2fe]")}>
+            {label}{selected === id && <Check className="h-4 w-4 text-[#00bcfe]" />}
         </button>
     );
     return (
@@ -145,7 +145,7 @@ export function BatchCategoryDialog({ sessionId, groups, categories, onClose, on
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
-                    <Button onClick={apply} disabled={saving || selected === undefined} className="bg-[#0E8A4F] text-white hover:bg-[#0B7442]">
+                    <Button onClick={apply} disabled={saving || selected === undefined} className="bg-[#00bcfe] text-white hover:bg-[#0084cc]">
                         {saving && <Loader2 className="h-4 w-4 animate-spin" />}Aplicar
                     </Button>
                 </DialogFooter>
@@ -252,7 +252,7 @@ export function BatchEditDialog({ sessionId, groups, onClose, onUpdated }: {
 
                         <div className="space-y-2">
                             <label className="flex items-center gap-2 text-sm font-medium">
-                                <input type="checkbox" checked={renameOn} onChange={e => setRenameOn(e.target.checked)} className="h-4 w-4 accent-[#0E8A4F]" />
+                                <input type="checkbox" checked={renameOn} onChange={e => setRenameOn(e.target.checked)} className="h-4 w-4 accent-[#00bcfe]" />
                                 Alterar nomes <span className="font-normal text-muted-foreground">(um campo por grupo)</span>
                             </label>
                             {renameOn && (
@@ -300,7 +300,7 @@ export function BatchEditDialog({ sessionId, groups, onClose, onUpdated }: {
                             {plans.map(p => (
                                 <li key={p.group.jid} className="space-y-1 px-3 py-2.5 text-sm">
                                     <p className="font-medium" title={groupName(p.group)}>{groupName(p.group)}</p>
-                                    {p.changes.map(c => <p key={c} className="flex gap-1.5 text-[13px]"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0E8A4F]" />{c}</p>)}
+                                    {p.changes.map(c => <p key={c} className="flex gap-1.5 text-[13px]"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#00bcfe]" />{c}</p>)}
                                     {p.skipped.map(c => <p key={c} className="flex gap-1.5 text-[13px] text-amber-700"><CircleSlash className="mt-0.5 h-3.5 w-3.5 shrink-0" />Não será alterado: {c}</p>)}
                                     {!p.changes.length && !p.skipped.length && <p className="text-[13px] text-muted-foreground">Nada muda neste grupo.</p>}
                                 </li>
@@ -319,12 +319,12 @@ export function BatchEditDialog({ sessionId, groups, onClose, onUpdated }: {
                 <DialogFooter className="gap-2">
                     {step === "edit" && <>
                         <Button variant="outline" onClick={onClose}>Cancelar</Button>
-                        <Button onClick={() => setStep("review")} disabled={nothing || emptyName} className="bg-[#0E8A4F] text-white hover:bg-[#0B7442]">Revisar alterações</Button>
+                        <Button onClick={() => setStep("review")} disabled={nothing || emptyName} className="bg-[#00bcfe] text-white hover:bg-[#0084cc]">Revisar alterações</Button>
                     </>}
                     {step === "review" && <>
                         <Button variant="outline" onClick={() => setStep("edit")}>Voltar</Button>
                         <Button onClick={() => { setStep("run"); runner.run(groups.map(g => g.jid), worker, 1200); }}
-                            disabled={!plans.some(p => p.changes.length)} className="bg-[#0E8A4F] text-white hover:bg-[#0B7442]">
+                            disabled={!plans.some(p => p.changes.length)} className="bg-[#00bcfe] text-white hover:bg-[#0084cc]">
                             Aplicar em {plans.filter(p => p.changes.length).length} {plans.filter(p => p.changes.length).length === 1 ? "grupo" : "grupos"}
                         </Button>
                     </>}

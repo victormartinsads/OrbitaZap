@@ -24,14 +24,14 @@ interface Part { part: number; label: string; chats: number; messages: number; f
 interface Missing { chat: string; when: string | null; what: string }
 
 const STATUS: Record<JobStatus, { label: string; className: string }> = {
-    running: { label: "Preparando", className: "bg-[#E7F6EE] text-[#0E8A4F]" },
+    running: { label: "Preparando", className: "bg-[#e0f2fe] text-[#00bcfe]" },
     paused: { label: "Pausada", className: "bg-amber-500/10 text-amber-700" },
-    completed: { label: "Pronta", className: "bg-[#E7F6EE] text-[#0E8A4F]" },
+    completed: { label: "Pronta", className: "bg-[#e0f2fe] text-[#00bcfe]" },
     completed_with_errors: { label: "Pronta com erros", className: "bg-amber-500/10 text-amber-700" },
     cancelled: { label: "Cancelada", className: "bg-muted text-muted-foreground" },
 };
 const PHASE = { scan: "Reunindo as mensagens já salvas", backfill: "Buscando o histórico antigo no celular", media: "Baixando os áudios", done: "Finalizado" };
-const green = "bg-[#0E8A4F] text-white hover:bg-[#0B7442]";
+const green = "bg-[#00bcfe] text-white hover:bg-[#0084cc]";
 const card = "rounded-xl border border-border/80 bg-card p-5 shadow-sm";
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 const fmtDate = (s: string | null) => (s ? new Date(s).toLocaleDateString("pt-BR") : "—");
@@ -128,9 +128,9 @@ function JobPanel({ base, job, stats, busy, onCall }: { base: string; job: Job; 
     const unavailable = stats?.media.unavailable ?? 0;
 
     return (
-        <section className={cn("rounded-xl border p-4 shadow-sm", attention ? "border-amber-300/70 bg-amber-50/60 dark:bg-amber-500/5" : job.status === "running" ? "border-[#0E8A4F]/30 bg-[#F4FBF7] dark:bg-[#0E8A4F]/5" : "border-border bg-card")}>
+        <section className={cn("rounded-xl border p-4 shadow-sm", attention ? "border-amber-300/70 bg-amber-50/60 dark:bg-amber-500/5" : job.status === "running" ? "border-[#00bcfe]/30 bg-[#F4FBF7] dark:bg-[#00bcfe]/5" : "border-border bg-card")}>
             <div className="flex flex-wrap items-center gap-3">
-                {job.status === "running" ? <Loader2 className="h-7 w-7 animate-spin text-[#0E8A4F]" /> : job.status === "completed" ? <CheckCircle2 className="h-7 w-7 text-[#0E8A4F]" /> : job.status === "cancelled" ? <Square className="h-7 w-7 text-muted-foreground" /> : <AlertTriangle className="h-7 w-7 text-amber-500" />}
+                {job.status === "running" ? <Loader2 className="h-7 w-7 animate-spin text-[#00bcfe]" /> : job.status === "completed" ? <CheckCircle2 className="h-7 w-7 text-[#00bcfe]" /> : job.status === "cancelled" ? <Square className="h-7 w-7 text-muted-foreground" /> : <AlertTriangle className="h-7 w-7 text-amber-500" />}
                 <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2 font-semibold">Exportação de {job.selected ?? "todas as"} conversa(s)<span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS[job.status].className)}>{STATUS[job.status].label}</span></p>
                     <p className="text-xs text-muted-foreground">{job.status === "running" ? PHASE[job.phase] : job.note ?? PHASE[job.phase]}</p>
@@ -147,7 +147,7 @@ function JobPanel({ base, job, stats, busy, onCall }: { base: string; job: Job; 
                 <div className="mt-3 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
                     <Stat value={stats.chats} label="Conversas encontradas" />
                     <Stat value={stats.messages} label="Mensagens salvas" />
-                    <Stat value={stats.media.saved} label="Arquivos baixados" className="text-[#0E8A4F]" />
+                    <Stat value={stats.media.saved} label="Arquivos baixados" className="text-[#00bcfe]" />
                     <Stat value={unavailable} label="Indisponíveis no WhatsApp" />
                     <Stat value={errors} label="Com erro (repetíveis)" className={errors ? "text-destructive" : undefined} />
                 </div>
@@ -159,7 +159,7 @@ function JobPanel({ base, job, stats, busy, onCall }: { base: string; job: Job; 
                     {!plan.complete && <p className="flex items-center gap-2 text-sm text-amber-700"><AlertTriangle className="h-4 w-4 shrink-0" />A preparação não terminou: o ZIP sai marcado como INCOMPLETO, com o que falta listado no relatório.</p>}
                     {plan.parts.map(p => (
                         <div key={p.part} className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2.5 text-sm">
-                            <FileArchive className="h-5 w-5 text-[#0E8A4F]" />
+                            <FileArchive className="h-5 w-5 text-[#00bcfe]" />
                             <div className="min-w-0 flex-1"><p className="font-medium">{p.label}{plan.complete ? "" : " (incompleto)"}</p><p className="text-xs text-muted-foreground">{p.chats} conversa(s) · {p.messages.toLocaleString("pt-BR")} mensagens · {p.files} arquivo(s) · ≈ {fmtBytes(p.bytes)}</p></div>
                             <Button asChild size="sm" className={plan.complete ? green : ""} variant={plan.complete ? "default" : "outline"}><a href={dl(p.part)}><Download className="h-4 w-4" />{plan.complete ? "Baixar ZIP" : "Baixar o que já está salvo"}</a></Button>
                         </div>
@@ -248,7 +248,7 @@ function ChatList({ base, picked, setPicked, includeMedia, setIncludeMedia, lock
                                         {r.name && <p className="text-xs text-muted-foreground">{phoneOf(r.jid)}</p>}
                                     </td>
                                     <td className="py-2 text-right tabular-nums">{r.messages.toLocaleString("pt-BR")}</td>
-                                    <td className="py-2 text-right tabular-nums">{r.audios ? <span className="inline-flex items-center gap-1 text-[#0E8A4F]"><Mic className="h-3 w-3" />{r.audios}</span> : <span className="text-muted-foreground">—</span>}</td>
+                                    <td className="py-2 text-right tabular-nums">{r.audios ? <span className="inline-flex items-center gap-1 text-[#00bcfe]"><Mic className="h-3 w-3" />{r.audios}</span> : <span className="text-muted-foreground">—</span>}</td>
                                     <td className="whitespace-nowrap py-2 pl-4 text-xs text-muted-foreground">{fmtDate(r.first)} a {fmtDate(r.last)}</td>
                                 </tr>
                             ))}

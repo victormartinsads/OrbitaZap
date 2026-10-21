@@ -140,7 +140,7 @@ export default function FlowsPage() {
                         <div className="flex gap-2 overflow-x-auto border-b border-border/70">
                             {([["all", "Todos", counts.all], ["ACTIVE", "Ativos", counts.ACTIVE], ["DRAFT", "Rascunhos", counts.DRAFT]] as const).map(([key, label, n]) => (
                                 <button key={key} type="button" onClick={() => { setTab(key); setPage(1); }}
-                                    className={`-mb-px whitespace-nowrap border-b-2 px-3 pb-3 text-[16px] font-medium transition-colors ${tab === key ? "border-[#12A35E] text-[#0E8A4F]" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                                    className={`-mb-px whitespace-nowrap border-b-2 px-3 pb-3 text-[16px] font-medium transition-colors ${tab === key ? "border-[#12A35E] text-[#00bcfe]" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                                     {label} ({n})
                                 </button>
                             ))}
@@ -159,7 +159,7 @@ export default function FlowsPage() {
                                     <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Ordenar por</p>
                                     {([["recent", "Mais recentes"], ["oldest", "Mais antigos"], ["name", "Nome (A–Z)"]] as const).map(([key, label]) => (
                                         <button key={key} type="button" onClick={() => setSort(key)}
-                                            className={`flex w-full items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-muted ${sort === key ? "font-medium text-[#0E8A4F]" : ""}`}>
+                                            className={`flex w-full items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-muted ${sort === key ? "font-medium text-[#00bcfe]" : ""}`}>
                                             {label}{sort === key && <Check className="h-4 w-4" />}
                                         </button>
                                     ))}
@@ -173,7 +173,7 @@ export default function FlowsPage() {
                             <div className="flex items-center justify-center gap-2 p-10 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando...</div>
                         ) : !flows.length ? (
                             <div className="flex flex-col items-center gap-3 p-12 text-center">
-                                <div className="rounded-2xl bg-[#E7F6EE] p-4"><Workflow className="h-8 w-8 text-[#0E8A4F]" /></div>
+                                <div className="rounded-2xl bg-[#e0f2fe] p-4"><Workflow className="h-8 w-8 text-[#00bcfe]" /></div>
                                 <p className="font-medium">Nenhum fluxo ainda</p>
                                 <p className="max-w-sm text-sm text-muted-foreground">Crie o primeiro fluxo para responder seus contatos automaticamente, como um atendente que segue um roteiro.</p>
                                 <Button onClick={openCreate}><Plus className="h-4 w-4" /> Criar fluxo</Button>
@@ -200,7 +200,7 @@ export default function FlowsPage() {
                                             <TableRow key={f.id}>
                                                 <TableCell className="py-4 pl-4">
                                                     <Link href={`/dashboard/flows/${f.id}`} className="flex items-center gap-4">
-                                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#E7F6EE]"><Workflow className="h-5 w-5 text-[#0E8A4F]" /></span>
+                                                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#e0f2fe]"><Workflow className="h-5 w-5 text-[#00bcfe]" /></span>
                                                         <span className="min-w-0">
                                                             <span className="block truncate text-[17px] font-semibold text-foreground">{f.name}</span>
                                                             <span className="block text-[14px] text-muted-foreground">Fluxo de conversa</span>
@@ -291,7 +291,7 @@ export default function FlowsPage() {
 function Stat({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: number; tone: "green" | "gray" }) {
     return (
         <div className="flex items-center gap-6 px-7 py-6">
-            <span className={`flex h-16 w-16 items-center justify-center rounded-xl ${tone === "green" ? "bg-[#E7F6EE] text-[#0E8A4F]" : "bg-muted text-foreground/70"}`}>
+            <span className={`flex h-16 w-16 items-center justify-center rounded-xl ${tone === "green" ? "bg-[#e0f2fe] text-[#00bcfe]" : "bg-muted text-foreground/70"}`}>
                 <Icon className="h-7 w-7" strokeWidth={1.8} />
             </span>
             <div>
@@ -313,7 +313,7 @@ function MenuItem({ icon: Icon, onClick, danger, children }: { icon: LucideIcon;
 function PageBtn({ active, disabled, onClick, children }: { active?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
     return (
         <button type="button" disabled={disabled} onClick={onClick}
-            className={`flex h-11 min-w-11 items-center justify-center rounded-xl border px-3 text-[15px] transition-colors disabled:opacity-40 ${active ? "border-transparent bg-[#E7F6EE] font-semibold text-[#0E8A4F]" : "border-border/70 hover:bg-muted/50"}`}>
+            className={`flex h-11 min-w-11 items-center justify-center rounded-xl border px-3 text-[15px] transition-colors disabled:opacity-40 ${active ? "border-transparent bg-[#e0f2fe] font-semibold text-[#00bcfe]" : "border-border/70 hover:bg-muted/50"}`}>
             {children}
         </button>
     );

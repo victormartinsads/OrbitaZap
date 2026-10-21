@@ -194,7 +194,7 @@ export function CategoryDialog({ open, onOpenChange, sessionId, categories, edit
                             ) : <span />}
                             <div className="flex gap-2">
                                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-                                <Button type="submit" disabled={saving || (touched && !!error)} className="bg-[#0E8A4F] text-white hover:bg-[#0B7442]">
+                                <Button type="submit" disabled={saving || (touched && !!error)} className="bg-[#00bcfe] text-white hover:bg-[#0084cc]">
                                     {saving && <Loader2 className="h-4 w-4 animate-spin" />}{editing ? "Salvar" : "Criar categoria"}
                                 </Button>
                             </div>
@@ -248,8 +248,8 @@ export function AssignCategoryDialog({ open, onOpenChange, sessionId, group, cat
 
     const option = (id: string | null, label: React.ReactNode) => (
         <button key={id ?? "none"} type="button" role="radio" aria-checked={selected === id} onClick={() => setSelected(id)}
-            className={cn("flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", selected === id && "bg-[#E7F6EE]")}>
-            {label}{selected === id && <Check className="h-4 w-4 shrink-0 text-[#0E8A4F]" />}
+            className={cn("flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", selected === id && "bg-[#e0f2fe]")}>
+            {label}{selected === id && <Check className="h-4 w-4 shrink-0 text-[#00bcfe]" />}
         </button>
     );
 
@@ -270,12 +270,12 @@ export function AssignCategoryDialog({ open, onOpenChange, sessionId, group, cat
                     {shown.map(c => option(c.id, <CategoryBadge category={c} />))}
                     {!shown.length && q && <p className="px-3 py-4 text-center text-sm text-muted-foreground">Nenhuma categoria encontrada.</p>}
                 </div>
-                <button type="button" onClick={onCreateNew} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#0E8A4F] hover:bg-[#E7F6EE]">
+                <button type="button" onClick={onCreateNew} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#00bcfe] hover:bg-[#e0f2fe]">
                     <Plus className="h-4 w-4" /> Nova categoria
                 </button>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-                    <Button onClick={save} disabled={saving || selected === (group?.categoryId ?? null)} className="bg-[#0E8A4F] text-white hover:bg-[#0B7442]">
+                    <Button onClick={save} disabled={saving || selected === (group?.categoryId ?? null)} className="bg-[#00bcfe] text-white hover:bg-[#0084cc]">
                         {saving && <Loader2 className="h-4 w-4 animate-spin" />}Salvar
                     </Button>
                 </DialogFooter>
@@ -310,7 +310,7 @@ export function GroupDetailsDialog({ group, category, sessionId, onOpenChange }:
                             {group.meAdmin && (
                                 <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/60 px-3 py-2">
                                     <span className="text-muted-foreground">Seu papel</span>
-                                    <span className="inline-flex items-center gap-1 font-medium text-[#0E8A4F]"><ShieldCheck className="h-4 w-4" />Admin</span>
+                                    <span className="inline-flex items-center gap-1 font-medium text-[#00bcfe]"><ShieldCheck className="h-4 w-4" />Admin</span>
                                 </div>
                             )}
                             <div className="space-y-1 rounded-lg bg-muted/60 px-3 py-2">

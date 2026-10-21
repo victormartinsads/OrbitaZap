@@ -18,7 +18,7 @@ RUN npm prune --omit=dev && npm install --no-save tsx typescript
 
 # Production image
 FROM node:26-alpine AS runner
-RUN apk add --no-cache openssl ca-certificates
+RUN apk add --no-cache openssl ca-certificates ffmpeg
 WORKDIR /app
 
 COPY --from=builder /app/package*.json ./

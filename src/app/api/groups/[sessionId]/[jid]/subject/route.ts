@@ -1,6 +1,7 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { waManager } from "@/modules/whatsapp/manager";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
+import { apiError, getErrorMessage } from "@/lib/api-error";
 
 // PUT: Update group subject/name
 export async function PUT(
@@ -46,11 +47,11 @@ export async function PUT(
             subject 
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Update group subject error:", error);
         
         // Handle specific errors
-        if (error.message?.includes("not-admin") || error.message?.includes("forbidden")) {
+        if (getErrorMessage(error).includes("not-admin") || getErrorMessage(error).includes("forbidden")) {
             return NextResponse.json({ status: false, message: "Bot must be admin to update group subject", error: "Bot must be admin to update group subject" }, { status: 403 });
         }
         

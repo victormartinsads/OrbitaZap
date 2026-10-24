@@ -65,7 +65,7 @@ export function initScheduler() {
 
                     // Update status or compute next sendAt if recurring
                     if (msg.cronExpression) {
-                        const interval = cronParser.parse(msg.cronExpression, { tz: "Asia/Jakarta" });
+                        const interval = cronParser.parse(msg.cronExpression, { tz: "America/Sao_Paulo" });
                         const nextDate = interval.next().toDate();
                         await prisma.scheduledMessage.update({
                             where: { id: msg.id },
@@ -86,7 +86,7 @@ export function initScheduler() {
                             data: { status: "FAILED" } // Failed to send
                         });
                     } else {
-                        const interval = cronParser.parse(msg.cronExpression, { tz: "Asia/Jakarta" });
+                        const interval = cronParser.parse(msg.cronExpression, { tz: "America/Sao_Paulo" });
                         await prisma.scheduledMessage.update({
                             where: { id: msg.id },
                             data: { sendAt: interval.next().toDate() }

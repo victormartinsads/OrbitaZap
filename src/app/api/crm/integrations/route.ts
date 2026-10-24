@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
 
 export async function GET() {
     try {
@@ -15,8 +16,8 @@ export async function GET() {
         });
 
         return NextResponse.json({ configs });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }
 
@@ -48,8 +49,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ config });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }
 
@@ -72,7 +73,7 @@ export async function DELETE(req: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }

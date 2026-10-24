@@ -4166,7 +4166,7 @@ All endpoints require authentication via:
                                                 id: { type: "string", example: "default" },
                                                 appName: { type: "string", example: "MarcFlow" },
                                                 logoUrl: { type: "string", example: "https://example.com/logo.png" },
-                                                timezone: { type: "string", example: "Asia/Jakarta" }
+                                                timezone: { type: "string", example: "America/Sao_Paulo" }
                                             }
                                         }
                                     }

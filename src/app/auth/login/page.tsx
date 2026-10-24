@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
@@ -74,7 +74,7 @@ function LoginForm() {
             <Bot className="h-8 w-8" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Bem-vindo de volta</h1>
-          <p className="text-muted-foreground mt-2">Entre na sua conta do MarcFlow</p>
+          <p className="text-muted-foreground mt-2">Entre na sua conta do OrbitaZap</p>
         </div>
 
         <div className="glass-panel rounded-3xl p-8 shadow-2xl shadow-black/5 dark:shadow-black/40">

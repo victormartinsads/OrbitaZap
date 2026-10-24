@@ -1,6 +1,9 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendFirstContactToLead } from "@/modules/prospect/crm-trigger";
+import { apiError } from "@/lib/api-error";
+import { patchLeadSchema } from "@/lib/validations";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -30,8 +33,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         }
 
         return NextResponse.json({ lead });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }
 
@@ -43,7 +46,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         }
 
         const { id } = await params;
-        const body = await req.json();
+        const raw = await req.json();
+        const parsed = patchLeadSchema.safeParse(raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+        }
+        const body = parsed.data;
 
         const currentLead = await prisma.crmLead.findFirst({
             where: { id, userId: session.user.id },
@@ -54,12 +62,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: "Lead não encontrado" }, { status: 404 });
         }
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
         const activitiesToCreate = [];
 
+        let newStage = null;
         if (body.stageId && body.stageId !== currentLead.stageId) {
             updateData.stageId = body.stageId;
-            const newStage = await prisma.crmPipelineStage.findUnique({ where: { id: body.stageId } });
+            newStage = await prisma.crmPipelineStage.findUnique({ where: { id: body.stageId } });
             activitiesToCreate.push({
                 userId: session.user.id,
                 type: "STAGE_CHANGE",
@@ -72,14 +81,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         if (body.email !== undefined) updateData.email = body.email;
         if (body.company !== undefined) updateData.company = body.company;
         if (body.jobTitle !== undefined) updateData.jobTitle = body.jobTitle;
-        if (body.value !== undefined) updateData.value = parseFloat(body.value);
+        if (body.value !== undefined) updateData.value = parseFloat(String(body.value));
         if (body.priority !== undefined) updateData.priority = body.priority;
         if (body.notes !== undefined) updateData.notes = body.notes;
         if (body.tags !== undefined) updateData.tags = Array.isArray(body.tags) ? body.tags.join(",") : body.tags;
         if (body.customFields !== undefined) updateData.customFields = body.customFields;
         if (body.phone !== undefined) {
-            updateData.phone = body.phone ? body.phone.replace(/\D/g, "") : null;
-            updateData.remoteJid = updateData.phone ? `${updateData.phone}@s.whatsapp.net` : null;
+            const cleanPhone = body.phone ? body.phone.replace(/\D/g, "") : null;
+            updateData.phone = cleanPhone;
+            updateData.remoteJid = cleanPhone ? `${cleanPhone}@s.whatsapp.net` : null;
         }
 
         if (body.newNote) {
@@ -107,9 +117,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             }
         });
 
+        // Disparar mensagem automática se a etapa tem autoFirstContact ativado
+        if (body.stageId && body.stageId !== currentLead.stageId && newStage?.autoFirstContact) {
+            sendFirstContactToLead(session.user.id, id).catch(() => {});
+        }
+
         return NextResponse.json({ lead: updatedLead });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }
 
@@ -130,7 +145,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
         });
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }

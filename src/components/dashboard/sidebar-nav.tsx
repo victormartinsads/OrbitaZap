@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
+    Sparkles,
     LayoutDashboard,
     MessageSquare,
     Users,
@@ -56,6 +57,7 @@ export const navGroups: NavGroup[] = [
             { href: "/dashboard/contacts", label: "Contatos", icon: UserCheck },
             { href: "/dashboard/groups", label: "Grupos", icon: Users },
             { href: "/dashboard/broadcast", label: "Transmissão", icon: Megaphone },
+            { href: "/dashboard/prospect", label: "Prospecção IA", icon: Sparkles },
         ],
     },
     {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export default function StickerPage() {
     const [loading, setLoading] = useState(false);
 
     // Advanced options
-    const [pack, setPack] = useState("MarcFlow");
+    const [pack, setPack] = useState("OrbitaZap");
     const [author, setAuthor] = useState("User");
     const [quality, setQuality] = useState(50);
     const [type, setType] = useState("full");

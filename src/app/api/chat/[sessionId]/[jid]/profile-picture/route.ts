@@ -1,6 +1,7 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { waManager } from "@/modules/whatsapp/manager";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
+import { apiError, getErrorMessage } from "@/lib/api-error";
 
 // POST: Fetch profile picture URL for a JID
 export async function POST(
@@ -37,9 +38,9 @@ export async function POST(
                 jid: decodedJid,
                 profilePicUrl
             });
-        } catch (error: any) {
+        } catch (error) {
             // If no profile picture exists
-            if (error.message?.includes('404') || error.message?.includes('not-found')) {
+            if (getErrorMessage(error).includes('404') || getErrorMessage(error).includes('not-found')) {
                 return NextResponse.json({ 
                     success: true,
                     jid: decodedJid,

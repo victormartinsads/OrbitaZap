@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
@@ -45,7 +45,7 @@ function SettingsContent() {
     };
 
     const [systemConfig, setSystemConfig] = useState({
-        appName: "MarcFlow",
+        appName: "OrbitaZap",
         logoUrl: "",
         timezone: "America/Sao_Paulo",
         enableRegistration: true
@@ -73,7 +73,7 @@ function SettingsContent() {
                 const data = responseData?.data;
                 if (data && !responseData.error) {
                     setSystemConfig({
-                        appName: data.appName || "MarcFlow",
+                        appName: data.appName || "OrbitaZap",
                         logoUrl: data.logoUrl || "",
                         timezone: data.timezone || "America/Sao_Paulo",
                         enableRegistration: data.enableRegistration !== undefined ? data.enableRegistration : true
@@ -182,7 +182,7 @@ function SettingsContent() {
                                     <Label className="text-xs font-semibold text-slate-700">Nome da Plataforma</Label>
                                     <input
                                         className={inputClass}
-                                        placeholder="MarcFlow"
+                                        placeholder="OrbitaZap"
                                         value={systemConfig.appName}
                                         onChange={(e) => setSystemConfig(prev => ({ ...prev, appName: e.target.value }))}
                                         disabled={!isSuperAdmin}

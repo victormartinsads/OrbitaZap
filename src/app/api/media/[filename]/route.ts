@@ -92,7 +92,7 @@ export async function GET(
             },
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Media serve error:", error);
         return NextResponse.json({ status: false, message: "Failed to serve media", error: "Failed to serve media" }, { status: 500 });
     }

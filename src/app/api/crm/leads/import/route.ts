@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
 
 export async function POST(req: Request) {
     try {
@@ -72,8 +73,8 @@ export async function POST(req: Request) {
             skipped: skippedCount,
             total: leads.length
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Bulk Import Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return apiError(error);
     }
 }

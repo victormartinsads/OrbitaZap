@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
 
 // Handler GET: Validação do Meta Webhook
 export async function GET(req: Request) {
@@ -138,8 +139,8 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Meta Webhook Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return apiError(error);
     }
 }

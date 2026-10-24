@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+﻿import { auth } from "@/lib/auth";
 import { Navbar } from "@/components/dashboard/navbar";
 import { SessionProvider } from "@/components/dashboard/session-provider";
 import { SidebarProvider } from "@/components/dashboard/sidebar-context";
@@ -18,7 +18,7 @@ export default async function DashboardLayout({
     const session = await auth();
     // @ts-ignore
     const systemConfig = await prisma.systemConfig.findUnique({ where: { id: "default" } });
-    const appName = systemConfig?.appName || "MarcFlow";
+    const appName = systemConfig?.appName || "OrbitaZap";
     const registrationEnabled = systemConfig?.enableRegistration ?? true;
 
     return (

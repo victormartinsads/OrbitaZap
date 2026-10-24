@@ -1,7 +1,8 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import si from "systeminformation";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
 
 // Ensure this route is dynamic
 export const dynamic = "force-dynamic";
@@ -76,8 +77,8 @@ export async function GET(req: NextRequest) {
             data
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Monitor API Error:", error);
-        return NextResponse.json({ status: false, message: error.message }, { status: 500 });
+        return apiError(error);
     }
 }

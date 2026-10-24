@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
@@ -302,7 +302,7 @@ export function DocsClient({ content, toc }: DocsClientProps) {
                 </article>
 
                 <footer className="mt-20 pt-8 border-t text-center text-sm text-gray-400">
-                    <p>© {new Date().getFullYear()} MarcFlow · criado por Marcos Maia (@marcolamaia). Todos os direitos reservados.</p>
+                    <p>© {new Date().getFullYear()} OrbitaZap · criado por Marcos Maia (@marcolamaia). Todos os direitos reservados.</p>
                 </footer>
             </main>
         </div>

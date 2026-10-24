@@ -1,6 +1,7 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser } from "@/lib/api-auth";
+import { systemSettingsSchema } from "@/lib/validations";
 
 export async function GET(request: NextRequest) {
     try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
             where: { id: "default" }
         });
 
-        return NextResponse.json({ status: true, message: "System config fetched", data: config || { appName: "MarcFlow", faviconUrl: "/favicon.ico" } });
+        return NextResponse.json({ status: true, message: "System config fetched", data: config || { appName: "OrbitaZap", faviconUrl: "/favicon.ico" } });
     } catch (error) {
         return NextResponse.json({ status: false, message: "Failed to fetch settings", error: "Failed to fetch settings" }, { status: 500 });
     }
@@ -28,14 +29,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ status: false, message: "Unauthorized", error: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await req.json();
-        const { appName, logoUrl, faviconUrl, timezone, enableRegistration } = body;
+        const raw = await req.json();
+        const parsed = systemSettingsSchema.safeParse(raw);
+        if (!parsed.success) {
+            return NextResponse.json({ status: false, message: "Dados inválidos", error: parsed.error.flatten() }, { status: 400 });
+        }
+        const { appName, logoUrl, faviconUrl, timezone, enableRegistration } = parsed.data;
 
         // @ts-ignore
         const config = await prisma.systemConfig.upsert({
             where: { id: "default" },
             update: { appName, logoUrl, faviconUrl, timezone, enableRegistration: enableRegistration ?? true },
-            create: { id: "default", appName, logoUrl: logoUrl || "", faviconUrl: faviconUrl || "/favicon.ico", timezone: timezone || "Asia/Jakarta", enableRegistration: enableRegistration ?? true }
+            create: { id: "default", appName, logoUrl: logoUrl || "", faviconUrl: faviconUrl || "/favicon.ico", timezone: timezone || "America/Sao_Paulo", enableRegistration: enableRegistration ?? true }
         });
 
         return NextResponse.json({ status: true, message: "System settings updated", data: config });

@@ -520,6 +520,7 @@ async function timeoutPath(ctx: Ctx, handle: string) {
 
 /** Called by the message store right after a NEW incoming message is saved (dedupe already done there). */
 export function onIncomingMessage(sessionId: string, dbSessionId: string, msg: IncomingMessage) {
+    const { isActiveProspectLead } = require("@/modules/prospect/responder");
     const jid = msg.remoteJid;
     if (msg.fromMe || !jid || jid.endsWith("@g.us") || jid === "status@broadcast" || jid.endsWith("@newsletter")) return;
     enqueue(`${dbSessionId}:${jid}`, async () => {
@@ -531,6 +532,7 @@ export function onIncomingMessage(sessionId: string, dbSessionId: string, msg: I
 
         const fd = await flowData(dbSessionId, jid);
         if (fd?.pausedUntil && fd.pausedUntil > new Date()) return;
+        if (await isActiveProspectLead(sessionId, [jid]).catch(() => false)) return;
 
         const flows = await prisma.flow.findMany({ where: { sessionId: dbSessionId, status: "ACTIVE", publishedGraph: { not: Prisma.DbNull } }, include: { triggers: true } });
         if (!flows.length) return;

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
 import { ArrowRight, Braces, Eye, EyeOff, Info, Lock, User } from "lucide-react";
-import { MarcFlowLogo } from "@/components/brand/marcflow-logo";
+import { OrbitaZapLogo } from "@/components/brand/marcflow-logo";
 
 // The hint box only ever shows the public defaults: custom credentials are never displayed
 const USING_DEFAULT_CREDENTIALS = (process.env.NEXT_PUBLIC_SWAGGER_USERNAME || "admin") === "admin"
@@ -83,15 +83,15 @@ export default function ApiDocsPage() {
                 <main className="relative mx-auto grid w-full max-w-7xl flex-1 items-center gap-12 px-4 py-10 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-16">
                     <section className="space-y-8">
                         <div className="flex items-center gap-3">
-                            <MarcFlowLogo className="h-11 w-11" />
-                            <span className="text-2xl font-semibold tracking-tight sm:text-3xl">MarcFlow</span>
+                            <OrbitaZapLogo className="h-11 w-11" />
+                            <span className="text-2xl font-semibold tracking-tight sm:text-3xl">OrbitaZap</span>
                             <span className="rounded-md border border-blue-500/70 px-2 py-0.5 text-sm font-medium text-blue-400">API</span>
                         </div>
                         <div className="space-y-4">
                             <h1 className="text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl xl:text-6xl">
                                 Suas integrações.<br />Novas possibilidades.
                             </h1>
-                            <p className="max-w-xl text-base text-slate-400 sm:text-lg">Acesse a documentação e conecte suas aplicações ao MarcFlow.</p>
+                            <p className="max-w-xl text-base text-slate-400 sm:text-lg">Acesse a documentação e conecte suas aplicações ao OrbitaZap.</p>
                         </div>
                         <div className="hidden max-w-xl overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/60 shadow-2xl sm:block">
                             <div className="flex items-center justify-between border-b border-slate-700/60 px-4 py-3">
@@ -179,7 +179,7 @@ export default function ApiDocsPage() {
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 shadow-lg">
                 <div className="container mx-auto flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold">Documentação da API do MarcFlow</h1>
+                        <h1 className="text-2xl font-bold">Documentação da API do OrbitaZap</h1>
                         <p className="text-blue-100 text-sm mt-1">
                             Documentação interativa da API · criado por Marcos Maia (@marcolamaia)
                         </p>

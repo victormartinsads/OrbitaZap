@@ -1,18 +1,18 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ArrowLeft, Lock, Shield } from "lucide-react";
 
 export const metadata = {
-    title: "Política de Privacidade | MarcFlow",
-    description: "Política de Privacidade do MarcFlow, gateway de WhatsApp auto-hospedado. Arquitetura sem rastreamento, propriedade dos dados e práticas de segurança.",
+    title: "Política de Privacidade | OrbitaZap",
+    description: "Política de Privacidade do OrbitaZap, gateway de WhatsApp auto-hospedado. Arquitetura sem rastreamento, propriedade dos dados e práticas de segurança.",
     openGraph: {
-        title: "Política de Privacidade | MarcFlow",
-        description: "Política de Privacidade do MarcFlow, gateway de WhatsApp auto-hospedado.",
+        title: "Política de Privacidade | OrbitaZap",
+        description: "Política de Privacidade do OrbitaZap, gateway de WhatsApp auto-hospedado.",
         type: "website",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Política de Privacidade | MarcFlow",
-        description: "Política de Privacidade do MarcFlow, gateway de WhatsApp auto-hospedado.",
+        title: "Política de Privacidade | OrbitaZap",
+        description: "Política de Privacidade do OrbitaZap, gateway de WhatsApp auto-hospedado.",
     },
 };
 
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
                     <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary hover:prose-a:text-primary/80 prose-p:leading-relaxed">
 
                         <p className="lead text-lg text-muted-foreground mb-8">
-                            No MarcFlow, acreditamos que seus dados são sua propriedade. Esta Política de Privacidade detalha os limites rigorosos sobre como as informações são tratadas ao usar nosso gateway de WhatsApp open source e auto-hospedado.
+                            No OrbitaZap, acreditamos que seus dados são sua propriedade. Esta Política de Privacidade detalha os limites rigorosos sobre como as informações são tratadas ao usar nosso gateway de WhatsApp open source e auto-hospedado.
                         </p>
 
                         <h2 className="flex items-center gap-2 mt-8 text-2xl border-b pb-2">
@@ -52,10 +52,10 @@ export default function PrivacyPage() {
                             1. Arquitetura sem rastreamento
                         </h2>
                         <p>
-                            Como o MarcFlow foi projetado para ser <strong>auto-hospedado</strong>, todo o processamento principal de dados acontece exclusivamente no hardware em que você instala a aplicação.
+                            Como o OrbitaZap foi projetado para ser <strong>auto-hospedado</strong>, todo o processamento principal de dados acontece exclusivamente no hardware em que você instala a aplicação.
                         </p>
                         <ul>
-                            <li><strong>Sem telemetria centralizada:</strong> os criadores do MarcFlow não recebem telemetria, análises nem relatórios de uso sobre as suas interações no WhatsApp.</li>
+                            <li><strong>Sem telemetria centralizada:</strong> os criadores do OrbitaZap não recebem telemetria, análises nem relatórios de uso sobre as suas interações no WhatsApp.</li>
                             <li><strong>Propriedade total dos dados:</strong> seus contatos, mensagens, agendamentos e respostas automáticas ficam no seu próprio banco de dados. Não podemos e não vamos acessá-lo.</li>
                         </ul>
 
@@ -65,13 +65,13 @@ export default function PrivacyPage() {
                         </p>
                         <ul>
                             <li><strong>Credenciais de autenticação:</strong> as senhas que você cria para o painel passam por hash seguro com bcrypt antes de serem armazenadas no seu banco de dados local.</li>
-                            <li><strong>Sessões do WhatsApp:</strong> o MarcFlow funciona como uma ponte para o WhatsApp Web. Os tokens (chaves) de sessão necessários para manter essa conexão são armazenados localmente no seu servidor.</li>
+                            <li><strong>Sessões do WhatsApp:</strong> o OrbitaZap funciona como uma ponte para o WhatsApp Web. Os tokens (chaves) de sessão necessários para manter essa conexão são armazenados localmente no seu servidor.</li>
                             <li><strong>Registros de comunicação:</strong> as mensagens enviadas e recebidas pelo gateway são registradas no seu banco de dados local para fornecer histórico e o funcionamento dos Webhooks.</li>
                         </ul>
 
                         <h2 className="mt-8 text-2xl border-b pb-2">3. Protegendo suas informações</h2>
                         <p>
-                            Embora o MarcFlow seja construído com práticas modernas de segurança, a segurança final dos seus dados depende do seu ambiente de hospedagem. Recomendamos fortemente:
+                            Embora o OrbitaZap seja construído com práticas modernas de segurança, a segurança final dos seus dados depende do seu ambiente de hospedagem. Recomendamos fortemente:
                         </p>
                         <ul>
                             <li>Instalar a aplicação atrás de um proxy reverso com <strong>criptografia SSL/TLS</strong> obrigatória (HTTPS).</li>
@@ -81,12 +81,12 @@ export default function PrivacyPage() {
 
                         <h2 className="mt-8 text-2xl border-b pb-2">4. Integrações de terceiros</h2>
                         <p>
-                            O MarcFlow usa a biblioteca <code>@whiskeysockets/baileys</code> para se comunicar diretamente com os servidores do WhatsApp. Ao usar este gateway, seu servidor estabelece uma conexão WebSocket direta com o WhatsApp. Lembre-se de que o seu uso do WhatsApp continua sujeito à Política de Privacidade da Meta.
+                            O OrbitaZap usa a biblioteca <code>@whiskeysockets/baileys</code> para se comunicar diretamente com os servidores do WhatsApp. Ao usar este gateway, seu servidor estabelece uma conexão WebSocket direta com o WhatsApp. Lembre-se de que o seu uso do WhatsApp continua sujeito à Política de Privacidade da Meta.
                         </p>
 
                         <div className="mt-12 p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10">
                             <p className="font-semibold mb-2">Precisa de mais detalhes?</p>
-                            <p className="text-sm text-muted-foreground mb-0">Se você tiver dúvidas específicas sobre o tratamento de dados ou quiser auditar o código, fale com o criador do MarcFlow, Marcos Maia, pelo <Link href="https://instagram.com/marcolamaia">Instagram @marcolamaia</Link>.</p>
+                            <p className="text-sm text-muted-foreground mb-0">Se você tiver dúvidas específicas sobre o tratamento de dados ou quiser auditar o código, fale com o criador do OrbitaZap, Marcos Maia, pelo <Link href="https://instagram.com/marcolamaia">Instagram @marcolamaia</Link>.</p>
                         </div>
                     </div>
                 </div>

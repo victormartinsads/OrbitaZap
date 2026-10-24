@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
 
 export async function GET() {
     try {
@@ -31,7 +32,7 @@ export async function GET() {
                     stages: {
                         create: [
                             { name: "Novo Lead", color: "#3b82f6", order: 0 },
-                            { name: "Primeiro Contato", color: "#f59e0b", order: 1 },
+                            { name: "Primeiro Contato", color: "#f59e0b", order: 1, autoFirstContact: true },
                             { name: "Qualificação", color: "#8b5cf6", order: 2 },
                             { name: "Proposta Enviada", color: "#ec4899", order: 3 },
                             { name: "Negociação", color: "#00bfa5", order: 4 },
@@ -50,8 +51,8 @@ export async function GET() {
         }
 
         return NextResponse.json({ pipelines });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }
 
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ pipeline });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }

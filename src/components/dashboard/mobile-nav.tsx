@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { BRAND_TAGLINE, MarcFlowLogo } from "@/components/brand/marcflow-logo";
 
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Workflow, Menu, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import {
+    Sparkles,
     LayoutDashboard,
     MessageSquare,
     Users,
@@ -54,6 +55,7 @@ const navGroups: NavGroup[] = [
         items: [
             { href: "/dashboard/chat", label: "Conversas", icon: MessageSquare },
             { href: "/dashboard/broadcast", label: "Transmissão", icon: Megaphone },
+            { href: "/dashboard/prospect", label: "Prospecção IA", icon: Sparkles },
             { href: "/dashboard/sticker", label: "Criador de figurinhas", icon: ImageIcon },
             { href: "/dashboard/archive", label: "Exportar conversas", icon: DatabaseBackup },
         ],
@@ -97,7 +99,7 @@ const navGroups: NavGroup[] = [
     },
 ];
 
-export function MobileNav({ appName = "MarcFlow" }: { appName?: string }) {
+export function MobileNav({ appName = "OrbitaZap" }: { appName?: string }) {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
     const { data: session } = useSession();

@@ -5,6 +5,15 @@ import makeWASocket, {
     WASocket,
     ConnectionState
 } from "@whiskeysockets/baileys";
+
+let _cachedBaileysVersion: [number, number, number] | null = null;
+async function getBaileysVersion(): Promise<[number, number, number]> {
+    if (!_cachedBaileysVersion) {
+        const { version } = await fetchLatestBaileysVersion();
+        _cachedBaileysVersion = version as [number, number, number];
+    }
+    return _cachedBaileysVersion;
+}
 import { prisma } from "@/lib/prisma";
 import { usePrismaAuthState } from "./auth/usePrismaAuthState";
 import { Server } from "socket.io";
@@ -14,6 +23,7 @@ import { syncGroups } from "./store/groups";
 import { bindContactSync } from "./store/contacts";
 import { bindChatState } from "./store/chat-state";
 import { bindAutoReply } from "./store/autoreply";
+import { bindProspectResponder } from "../prospect/responder";
 import { bindPpGuard } from "./store/ppguard";
 import { antispam } from "./antispam";
 import { logger } from "@/lib/logger";
@@ -56,7 +66,7 @@ export class WhatsAppInstance {
         const botConfig = (sessionData as any)?.botConfig;
 
         const { state, saveCreds } = await usePrismaAuthState(this.sessionId);
-        const { version } = await fetchLatestBaileysVersion();
+        const version = await getBaileysVersion();
 
         this.socket = makeWASocket({
             version,
@@ -217,6 +227,7 @@ export class WhatsAppInstance {
                 }
 
                 bindAutoReply(this.socket as WASocket, this.sessionId);
+                bindProspectResponder(this.socket as WASocket, this.sessionId);
                 bindPpGuard(this.socket as WASocket, this.sessionId);
 
                 await prisma.session.update({

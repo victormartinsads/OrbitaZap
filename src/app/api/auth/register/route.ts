@@ -53,7 +53,7 @@ export async function POST(req: Request) {
             message: "User registered successfully",
             user: { id: newUser.id, name: newUser.name, email: newUser.email },
         });
-    } catch (error: any) {
+    } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
                 { error: "Invalid registration data provided" },

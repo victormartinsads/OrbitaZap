@@ -1,8 +1,8 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
 import { waManager } from "@/modules/whatsapp/manager";
-
 import { prisma } from "@/lib/prisma";
+import { apiError, getErrorMessage } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -92,8 +92,8 @@ export async function GET(
             }
         });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Session Monitor API Error:", error);
-        return NextResponse.json({ status: false, message: error.message }, { status: 500 });
+        return apiError(error);
     }
 }

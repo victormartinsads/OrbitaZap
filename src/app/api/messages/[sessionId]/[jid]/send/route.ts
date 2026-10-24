@@ -32,9 +32,9 @@ export async function POST(
         const result = await ChatService.sendTextMessage(sessionId, jid, message, mentions, quotedMessageId);
 
         return NextResponse.json({ status: true, message: "Message sent successfully", data: result });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Send message error:", error);
-        const errorMsg = error?.message || "Failed to send message";
+        const errorMsg = process.env.NODE_ENV === "production" ? "Failed to send message" : (error instanceof Error ? error.message : "Failed to send message");
         return NextResponse.json({ status: false, message: errorMsg, error: errorMsg }, { status: 500 });
     }
 }

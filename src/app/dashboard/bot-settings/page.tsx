@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useSession as useSessionProvider } from "@/components/dashboard/session-provider";
@@ -24,7 +24,7 @@ export default function BotSettingsPage() {
     const { sessionId } = useSessionProvider();
 
     const [botConfig, setBotConfig] = useState({
-        botName: "MarcFlow Bot",
+        botName: "OrbitaZap Bot",
         prefix: "#",
         enableSticker: true,
         enableVideoSticker: true,
@@ -194,7 +194,7 @@ export default function BotSettingsPage() {
                             <div className="grid gap-2">
                                 <Label>Nome do bot</Label>
                                 <Input
-                                    placeholder="MarcFlow Bot"
+                                    placeholder="OrbitaZap Bot"
                                     value={botConfig.botName}
                                     onChange={(e) => setBotConfig(prev => ({ ...prev, botName: e.target.value }))}
                                 />

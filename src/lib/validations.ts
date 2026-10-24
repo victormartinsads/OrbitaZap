@@ -26,3 +26,45 @@ export const stickerSchema = z.object({
     jid: z.string().min(1),
     // File validation handled separately as it comes from FormData
 });
+
+const priorityEnum = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+
+export const createLeadSchema = z.object({
+    pipelineId:   z.string().min(1, "pipelineId é obrigatório"),
+    stageId:      z.string().min(1, "stageId é obrigatório"),
+    name:         z.string().min(1, "nome é obrigatório"),
+    phone:        z.string().optional(),
+    email:        z.string().optional(),
+    company:      z.string().optional(),
+    jobTitle:     z.string().optional(),
+    value:        z.union([z.number(), z.string()]).optional(),
+    priority:     priorityEnum.optional().default("MEDIUM"),
+    source:       z.string().optional(),
+    campaignName: z.string().optional(),
+    notes:        z.string().optional(),
+    tags:         z.union([z.array(z.string()), z.string()]).optional(),
+    customFields: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const patchLeadSchema = z.object({
+    stageId:      z.string().optional(),
+    name:         z.string().min(1).optional(),
+    phone:        z.string().nullish(),
+    email:        z.string().nullish(),
+    company:      z.string().nullish(),
+    jobTitle:     z.string().nullish(),
+    value:        z.union([z.number(), z.string()]).optional(),
+    priority:     priorityEnum.optional(),
+    notes:        z.string().nullish(),
+    tags:         z.union([z.array(z.string()), z.string()]).nullish(),
+    customFields: z.record(z.string(), z.unknown()).nullish(),
+    newNote:      z.string().optional(),
+});
+
+export const systemSettingsSchema = z.object({
+    appName:            z.string().min(1).optional(),
+    logoUrl:            z.string().optional(),
+    faviconUrl:         z.string().optional(),
+    timezone:           z.string().optional(),
+    enableRegistration: z.boolean().optional(),
+});

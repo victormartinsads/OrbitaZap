@@ -1,6 +1,7 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
+import { apiError, getErrorMessage } from "@/lib/api-error";
 
 export async function GET(
     request: NextRequest,
@@ -97,8 +98,8 @@ export async function POST(
         });
 
         return NextResponse.json({ status: true, message: "Webhook created successfully", data: webhook });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Create webhook error detailed:", error);
-        return NextResponse.json({ status: false, message: "Failed to create webhook", error: "Failed to create webhook", details: error.message }, { status: 500 });
+        return NextResponse.json({ status: false, message: "Failed to create webhook", error: "Failed to create webhook", details: getErrorMessage(error) }, { status: 500 });
     }
 }

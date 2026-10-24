@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_DIRECT")
 }
 
 enum Role {
@@ -298,7 +299,7 @@ model SystemConfig {
   appName            String   @default("MarcFlow")
   logoUrl            String?
   faviconUrl         String?
-  timezone           String   @default("Asia/Jakarta")
+  timezone           String   @default("America/Sao_Paulo")
   enableRegistration Boolean  @default(true)
   
   updatedAt          DateTime @updatedAt
@@ -731,10 +732,11 @@ model CrmPipelineStage {
   name        String
   color       String   @default("#00bfa5")
   order       Int      @default(0)
-  isWon       Boolean  @default(false)
-  isLost      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isWon            Boolean  @default(false)
+  isLost           Boolean  @default(false)
+  autoFirstContact Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   pipeline    CrmPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
   leads       CrmLead[]
@@ -820,3 +822,99 @@ model CrmIntegrationConfig {
   @@index([userId, provider])
 }
 
+
+// ───────────── Prospecção IA ─────────────
+// Busca empresas (Google Maps), dispara a 1ª mensagem e deixa o Gemini conversar até o lead demonstrar interesse.
+// userId / sessionId são strings soltas (sem relação) para não alterar os modelos existentes.
+
+model ProspectConfig {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  sessionId     String?  // Session.sessionId (string do Baileys) usada para prospectar
+  persona       String   @default("Marcos, da agência") @db.Text
+  offerText     String   @default("") @db.Text
+  extraRules    String   @default("") @db.Text
+  geminiApiKey  String?  @db.Text
+  geminiModel   String   @default("gemini-flash-latest")
+  mapsApiKey    String?  @db.Text
+  dailyLimit    Int      @default(40)
+  minDelaySec   Int      @default(90)
+  maxDelaySec   Int      @default(240)
+  workStart     Int      @default(9)  // hora local (0-23)
+  workEnd       Int      @default(18)
+  timezone      String   @default("America/Sao_Paulo")
+  aiEnabled     Boolean  @default(true)
+  notifyPhone   String?  // seu número pessoal: recebe aviso quando um lead esquenta
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProspectCampaign {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  openingMessage String   @db.Text
+  status         String   @default("DRAFT") // DRAFT, RUNNING, PAUSED, DONE
+  pauseReason    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  leads          ProspectLead[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ProspectLead {
+  id            String    @id @default(cuid())
+  userId        String
+  campaignId    String?
+  name          String
+  phone         String    // só dígitos, com DDI (55...)
+  jid           String?   // jid confirmado pelo WhatsApp (onWhatsApp)
+  lid           String?
+  city          String?
+  category      String?
+  address       String?
+  rating        Float?
+  reviews       Int?
+  website       String?
+  mapsUrl       String?   @db.Text
+  placeId       String?
+  source        String    @default("MAPS") // MAPS, CSV, MANUAL
+  // NEW, QUEUED, CONTACTED, CONVERSING, INTERESTED, NOT_INTERESTED, OPTED_OUT, NO_WHATSAPP, FAILED
+  status        String    @default("NEW")
+  error         String?
+  aiPaused      Boolean   @default(false)
+  aiSummary     String?   @db.Text
+  lastIntent    String?
+  unread        Int       @default(0)
+  contactedAt   DateTime?
+  lastInboundAt DateTime?
+  lastOutboundAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  campaign      ProspectCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  messages      ProspectMessage[]
+
+  @@unique([userId, phone])
+  @@index([userId, status])
+  @@index([campaignId, status])
+  @@index([jid])
+  @@index([lid])
+}
+
+model ProspectMessage {
+  id        String   @id @default(cuid())
+  leadId    String
+  fromMe    Boolean
+  byAI      Boolean  @default(false)
+  content   String   @db.Text
+  keyId     String?
+  createdAt DateTime @default(now())
+
+  lead      ProspectLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt])
+}

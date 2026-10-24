@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
+import { createLeadSchema } from "@/lib/validations";
 
 export async function GET(req: Request) {
     try {
@@ -43,8 +45,8 @@ export async function GET(req: Request) {
         });
 
         return NextResponse.json({ leads });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }
 
@@ -55,31 +57,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const body = await req.json();
-        const {
-            pipelineId,
-            stageId,
-            name,
-            phone,
-            email,
-            company,
-            jobTitle,
-            value,
-            priority,
-            source,
-            campaignName,
-            notes,
-            tags,
-            customFields
-        } = body;
-
-        if (!name || !pipelineId || !stageId) {
-            return NextResponse.json({ error: "Nome, funil e etapa são obrigatórios" }, { status: 400 });
+        const raw = await req.json();
+        const parsed = createLeadSchema.safeParse(raw);
+        if (!parsed.success) {
+            return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
         }
+        const { pipelineId, stageId, name, phone, email, company, jobTitle, value, priority, source, campaignName, notes, tags, customFields } = parsed.data;
 
         // Sanitizar telefone e criar remoteJid se fornecido
-        let cleanPhone = phone ? phone.replace(/\D/g, "") : null;
-        let remoteJid = cleanPhone ? `${cleanPhone}@s.whatsapp.net` : null;
+        const cleanPhone = phone ? phone.replace(/\D/g, "") : null;
+        const remoteJid = cleanPhone ? `${cleanPhone}@s.whatsapp.net` : null;
 
         const lead = await prisma.crmLead.create({
             data: {
@@ -92,13 +79,13 @@ export async function POST(req: Request) {
                 email,
                 company,
                 jobTitle,
-                value: value ? parseFloat(value) : 0.00,
+                value: value ? Number(value) : 0.00,
                 priority: priority || "MEDIUM",
                 source: source || "MANUAL",
                 campaignName,
                 notes,
                 tags: Array.isArray(tags) ? tags.join(",") : tags,
-                customFields: customFields || null,
+                customFields: (customFields as any) ?? undefined,
                 activities: {
                     create: {
                         userId: session.user.id,
@@ -115,7 +102,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ lead });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error) {
+        return apiError(error);
     }
 }

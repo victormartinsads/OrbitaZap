@@ -1,9 +1,11 @@
+import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { WhatsAppInstance } from "./instance";
 import { Server } from "socket.io";
 import { initScheduler } from "@/lib/cron";
 import { startFlowScheduler } from "@/modules/flows/engine";
 import { pauseOrphanedBroadcasts, startBroadcastScheduler } from "@/modules/broadcast/runner";
+import { startProspectScheduler } from "@/modules/prospect/runner";
 import { logger } from "@/lib/logger";
 
 export class WhatsAppManager {
@@ -16,6 +18,7 @@ export class WhatsAppManager {
         startFlowScheduler();
         pauseOrphanedBroadcasts().catch(e => logger.error("Broadcast", "could not pause orphaned broadcasts", e));
         startBroadcastScheduler();
+        startProspectScheduler();
     }
 
     public static getInstance(): WhatsAppManager {
@@ -73,7 +76,7 @@ export class WhatsAppManager {
             throw new Error("Socket.IO not initialized");
         }
 
-        const sessionId = customSessionId || Math.random().toString(36).substring(7);
+        const sessionId = customSessionId || randomBytes(6).toString("hex");
 
         const session = await prisma.session.create({
             data: {

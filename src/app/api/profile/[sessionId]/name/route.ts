@@ -1,6 +1,7 @@
-import { NextResponse, NextRequest } from "next/server";
+﻿import { NextResponse, NextRequest } from "next/server";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
 import { waManager } from "@/modules/whatsapp/manager";
+import { apiError, getErrorMessage } from "@/lib/api-error";
 
 export async function PUT(
     request: NextRequest,
@@ -35,8 +36,8 @@ export async function PUT(
 
         return NextResponse.json({ status: true, message: "Profile name updated" });
 
-    } catch (error: any) {
+    } catch (error) {
         console.error("Update profile name error:", error);
-        return NextResponse.json({ status: false, message: error.message }, { status: 500 });
+        return NextResponse.json({ status: false, message: getErrorMessage(error) }, { status: 500 });
     }
 }

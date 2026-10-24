@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidCpfCnpj, onlyDigits } from "@/lib/billing/document";
 
 export const createGroupSchema = z.object({
     sessionId: z.string().min(1, "Session ID is required"),
@@ -59,6 +60,20 @@ export const patchLeadSchema = z.object({
     tags:         z.union([z.array(z.string()), z.string()]).nullish(),
     customFields: z.record(z.string(), z.unknown()).nullish(),
     newNote:      z.string().optional(),
+});
+
+const billingCycleEnum = z.enum(["MONTHLY", "YEARLY"]);
+
+export const billingCheckoutSchema = z.object({
+    planId:  z.string().min(1),
+    cycle:   billingCycleEnum,
+    cpfCnpj: z.string().transform(onlyDigits).refine(isValidCpfCnpj, "CPF ou CNPJ inválido"),
+    phone:   z.string().transform(onlyDigits).refine(v => v === "" || (v.length >= 10 && v.length <= 11), "Telefone inválido").optional(),
+});
+
+export const billingChangePlanSchema = z.object({
+    planId: z.string().min(1),
+    cycle:  billingCycleEnum,
 });
 
 export const systemSettingsSchema = z.object({

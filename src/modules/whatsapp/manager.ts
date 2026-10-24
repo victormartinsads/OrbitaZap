@@ -7,6 +7,7 @@ import { startFlowScheduler } from "@/modules/flows/engine";
 import { pauseOrphanedBroadcasts, startBroadcastScheduler } from "@/modules/broadcast/runner";
 import { startProspectScheduler } from "@/modules/prospect/runner";
 import { logger } from "@/lib/logger";
+import { getBillingState } from "@/lib/billing/access";
 
 export class WhatsAppManager {
     private static instance: WhatsAppManager;
@@ -38,11 +39,14 @@ export class WhatsAppManager {
             where: {
                 status: { not: "LOGGED_OUT" }
             },
-            select: { sessionId: true, userId: true, status: true }
+            select: { sessionId: true, userId: true, status: true, user: { select: { role: true } } }
         });
 
         let started = 0;
         for (const session of sessions) {
+            const billing = await getBillingState(session.userId, session.user.role);
+            if (!billing.isActive) continue;
+
             // Only auto-init sessions that were CONNECTED before (have auth creds)
             const authCount = await prisma.authState.count({
                 where: { sessionId: session.sessionId }

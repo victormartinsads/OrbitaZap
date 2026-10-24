@@ -30,7 +30,21 @@ interface UserProfile {
     _count?: {
         sessions: number;
     }
+    subscription?: {
+        status: string;
+        trialEndsAt: string | null;
+        currentPeriodEnd: string | null;
+        plan: { name: string };
+    } | null;
 }
+
+const SUBSCRIPTION_LABEL: Record<string, string> = {
+    TRIALING: "Teste",
+    ACTIVE: "Ativa",
+    PAST_DUE: "Em atraso",
+    CANCELED: "Cancelada",
+    EXPIRED: "Expirada",
+};
 
 export default function UsersPage() {
     const { data: session } = useSession();
@@ -240,6 +254,13 @@ export default function UsersPage() {
                                     <span>{user._count?.sessions || 0} Sessões</span>
                                     <span>Desde {new Date(user.createdAt).toLocaleDateString()}</span>
                                 </div>
+                                {user.subscription && (
+                                    <div className="text-xs text-muted-foreground">
+                                        Plano {user.subscription.plan.name} · {SUBSCRIPTION_LABEL[user.subscription.status] ?? user.subscription.status}
+                                        {user.subscription.status === "TRIALING" && user.subscription.trialEndsAt &&
+                                            ` até ${new Date(user.subscription.trialEndsAt).toLocaleDateString("pt-BR")}`}
+                                    </div>
+                                )}
                             </div>
                             <div className="bg-slate-50 p-3 flex justify-end gap-2 border-t">
                                 <Button size="sm" variant="ghost" onClick={() => {

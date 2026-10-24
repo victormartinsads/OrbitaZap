@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { waManager } from "@/modules/whatsapp/manager";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { apiError } from "@/lib/api-error";
+import { assertSessionOwnerActive } from "@/lib/billing/access";
 
 export async function POST(
     request: NextRequest,
@@ -27,6 +29,14 @@ export async function POST(
         const validActions = ["start", "stop", "restart", "logout", "pair"];
         if (!validActions.includes(action)) {
             return NextResponse.json({ status: false, message: "Invalid action", error: "Invalid action" }, { status: 400 });
+        }
+
+        if (action === "start" || action === "restart" || action === "pair") {
+            try {
+                await assertSessionOwnerActive(sessionId);
+            } catch (e) {
+                return apiError(e);
+            }
         }
 
         const body = await request.json().catch(() => ({}));

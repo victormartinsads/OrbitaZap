@@ -7,6 +7,9 @@ import { UpdateChecker } from "@/components/dashboard/update-checker";
 import { RegistrationWarning } from "@/components/dashboard/registration-warning";
 import { prisma } from "@/lib/prisma";
 import { Toaster } from "sonner";
+import { getBillingState } from "@/lib/billing/access";
+import { BillingBanner } from "@/components/dashboard/billing-banner";
+import { BillingGate } from "@/components/dashboard/billing-gate";
 import pkg from "../../../package.json";
 
 
@@ -20,6 +23,10 @@ export default async function DashboardLayout({
     const systemConfig = await prisma.systemConfig.findUnique({ where: { id: "default" } });
     const appName = systemConfig?.appName || "OrbitaZap";
     const registrationEnabled = systemConfig?.enableRegistration ?? true;
+
+    const billing = session?.user?.id
+        ? await getBillingState(session.user.id, session.user.role as string)
+        : null;
 
     return (
         <SessionProvider>
@@ -40,9 +47,12 @@ export default async function DashboardLayout({
 
                     {/* Main Content */}
                     <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative z-10" suppressHydrationWarning={true}>
+                        {billing && (
+                            <BillingBanner reason={billing.reason} daysLeft={billing.daysLeft} deadline={billing.deadline} />
+                        )}
                         <Navbar appName={appName} />
                         <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6 styled-scrollbar">
-                            {children}
+                            <BillingGate initialActive={billing?.isActive ?? true}>{children}</BillingGate>
                         </main>
                     </div>
                     <Toaster />

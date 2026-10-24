@@ -31,6 +31,7 @@ import {
     MessageCircleReply,
     UserPlus,
     DatabaseBackup,
+    CreditCard,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -92,6 +93,7 @@ const navGroups: NavGroup[] = [
             { href: "/dashboard/media", label: "Gerenciador de mídia", icon: HardDrive },
             { href: "/dashboard/sessions/access", label: "Acesso às sessões", icon: UserPlus },
             { href: "/dashboard/users", label: "Usuários", icon: Users },
+            { href: "/dashboard/billing", label: "Assinatura", icon: CreditCard },
             { href: "/dashboard/settings", label: "Configurações", icon: Settings },
             { href: "/dashboard/system-monitor", label: "Monitor do sistema", icon: Activity, superadminOnly: true },
             { href: "/dashboard/notifications", label: "Notificações", icon: Bell, superadminOnly: true },

@@ -3,6 +3,7 @@ import cronParser from "cron-parser";
 import { prisma } from "@/lib/prisma";
 import { waManager } from "@/modules/whatsapp/manager";
 import { logger } from "./logger";
+import { runBillingExpiration } from "./billing/expire";
 export function initScheduler() {
     // Run every minute
     cron.schedule("* * * * *", async () => {
@@ -99,6 +100,10 @@ export function initScheduler() {
             logger.error("Cron", "Scheduler error:", error);
         }
     });
-    
+
+    cron.schedule("5 * * * *", () => {
+        runBillingExpiration().catch(error => logger.error("Cron", "Billing expiration error:", error));
+    });
+
     logger.info("Cron", "Scheduler initialized");
 }

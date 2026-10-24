@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { waManager } from "@/modules/whatsapp/manager";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
 import { clampInterval, runBroadcast } from "@/modules/broadcast/runner";
+import { apiError } from "@/lib/api-error";
+import { assertSessionOwnerActive } from "@/lib/billing/access";
 import { z } from "zod";
 
 const broadcastBodySchema = z.object({
@@ -55,6 +57,12 @@ export async function POST(
         const canAccess = await canAccessSession(user.id, user.role, sessionId);
         if (!canAccess) {
             return NextResponse.json({ status: false, message: "Forbidden", error: "Forbidden" }, { status: 403 });
+        }
+
+        try {
+            await assertSessionOwnerActive(sessionId);
+        } catch (e) {
+            return apiError(e);
         }
 
         const instance = waManager.getInstance(sessionId);

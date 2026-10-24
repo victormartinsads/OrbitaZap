@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { trialEndDate } from "@/lib/billing/access";
 
 const registerSchema = z.object({
     name: z.string().min(2),
@@ -45,6 +46,9 @@ export async function POST(req: Request) {
                 name,
                 email,
                 password: hashedPassword,
+                subscription: {
+                    create: { planId: "starter", status: "TRIALING", trialEndsAt: trialEndDate() },
+                },
             },
         });
 

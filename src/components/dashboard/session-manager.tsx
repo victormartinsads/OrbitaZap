@@ -107,6 +107,13 @@ export function SessionManager({ user }: { user: any }) {
             const responseData = await res.json();
             const session = responseData?.data;
 
+            if (res.status === 402) {
+                toast.error(responseData.error, {
+                    action: { label: "Fazer upgrade", onClick: () => router.push("/dashboard/billing") },
+                    duration: 8000,
+                });
+                return;
+            }
             if (!res.ok || !session) throw new Error(responseData.error || responseData.message || "Falha ao criar");
 
             setSessions([...sessions, session]);

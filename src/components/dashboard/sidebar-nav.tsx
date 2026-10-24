@@ -22,7 +22,8 @@ import {
     UserPlus,
     DatabaseBackup,
     Workflow,
-    Kanban
+    Kanban,
+    CreditCard
 } from "lucide-react";
 import { useSidebar } from "./sidebar-context";
 import {
@@ -72,6 +73,7 @@ export const navGroups: NavGroup[] = [
     {
         label: "Sistema",
         items: [
+            { href: "/dashboard/billing", label: "Assinatura", icon: CreditCard },
             { href: "/dashboard/settings", label: "Configurações", icon: Settings },
         ],
     },

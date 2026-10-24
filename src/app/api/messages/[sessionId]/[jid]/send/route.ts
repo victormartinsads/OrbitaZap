@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
 import { ChatService } from "@/modules/whatsapp/chat.service";
+import { apiError } from "@/lib/api-error";
+import { assertSessionOwnerActive } from "@/lib/billing/access";
 
 export async function POST(
     request: NextRequest,
@@ -26,6 +28,12 @@ export async function POST(
         const canAccess = await canAccessSession(user.id, user.role, sessionId);
         if (!canAccess) {
             return NextResponse.json({ status: false, message: "Forbidden - Cannot access this session", error: "Forbidden - Cannot access this session" }, { status: 403 });
+        }
+
+        try {
+            await assertSessionOwnerActive(sessionId);
+        } catch (e) {
+            return apiError(e);
         }
 
         // Send Message using ChatService

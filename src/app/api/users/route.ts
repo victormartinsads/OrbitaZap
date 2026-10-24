@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser, isAdmin } from "@/lib/api-auth";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { trialEndDate } from "@/lib/billing/access";
 
 const createUserSchema = z.object({
     name: z.string().min(2),
@@ -30,6 +31,9 @@ export async function GET(request: NextRequest) {
                 createdAt: true,
                 _count: {
                     select: { sessions: true }
+                },
+                subscription: {
+                    select: { status: true, trialEndsAt: true, currentPeriodEnd: true, plan: { select: { name: true } } }
                 }
             }
         });
@@ -71,7 +75,10 @@ export async function POST(request: NextRequest) {
                 name,
                 email,
                 password: hashedPassword,
-                role: role as any
+                role: role as any,
+                ...(role !== "SUPERADMIN" && {
+                    subscription: { create: { planId: "starter", status: "TRIALING", trialEndsAt: trialEndDate() } },
+                }),
             },
             select: {
                 id: true,

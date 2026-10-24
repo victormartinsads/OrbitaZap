@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { waManager } from "@/modules/whatsapp/manager";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUser, getAccessibleSessions } from "@/lib/api-auth";
+import { apiError } from "@/lib/api-error";
+import { assertCanCreateSession } from "@/lib/billing/access";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +37,12 @@ export async function POST(request: NextRequest) {
 
         if (!name) {
             return NextResponse.json({ status: false, message: "Session name is required", error: "Session name is required" }, { status: 400 });
+        }
+
+        try {
+            await assertCanCreateSession(user.id, user.role);
+        } catch (e) {
+            return apiError(e);
         }
 
         // Create session for the authenticated user

@@ -43,15 +43,89 @@ model User {
   password  String
   role      Role     @default(OWNER)
   apiKey    String?  @unique // API Key for authentication
+  cpfCnpj   String?
+  phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   sessions  Session[]
   webhooks  Webhook[]
   notifications Notification[]
   sessionAccesses SessionAccess[]
   crmPipelines    CrmPipeline[]
   crmLeads        CrmLead[]
+  subscription    Subscription?
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+model Plan {
+  id            String         @id
+  name          String
+  priceMonthly  Decimal        @db.Decimal(10, 2)
+  priceYearly   Decimal        @db.Decimal(10, 2)
+  maxSessions   Int
+  isActive      Boolean        @default(true)
+  order         Int            @default(0)
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  planId              String
+  status              SubscriptionStatus @default(TRIALING)
+  cycle               BillingCycle       @default(MONTHLY)
+  trialEndsAt         DateTime?
+  currentPeriodEnd    DateTime?
+  pendingPlanId       String?
+  trialReminderSent   Boolean            @default(false)
+  asaasCustomerId     String?
+  asaasSubscriptionId String?            @unique
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@index([status])
+}
+
+model Payment {
+  id             String    @id @default(cuid())
+  subscriptionId String
+  asaasPaymentId String    @unique
+  value          Decimal   @db.Decimal(10, 2)
+  status         String
+  billingType    String?
+  dueDate        DateTime
+  paidAt         DateTime?
+  invoiceUrl     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+}
+
+model BillingEvent {
+  id          String   @id
+  type        String
+  payload     Json
+  processedAt DateTime @default(now())
 }
 
 model Session {

@@ -12,6 +12,8 @@
     "lint": "eslint",
     "db:push": "prisma db push && prisma generate",
     "db:studio": "prisma studio",
+    "db:seed-plans": "npx tsx prisma/seed-plans.ts",
+    "db:backfill-subscriptions": "npx tsx prisma/backfill-subscriptions.ts",
     "make-admin": "node scripts/setup-admin.js",
     "postinstall": "patch-package"
   },

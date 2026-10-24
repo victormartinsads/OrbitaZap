@@ -906,6 +906,7 @@ model CrmIntegrationConfig {
   webhookToken      String   @unique @default(cuid())
   verifyToken       String?
   accessToken       String?  @db.Text
+  appSecret         String?
   targetPipelineId  String?
   targetStageId     String?
   autoTriggerFlowId String?

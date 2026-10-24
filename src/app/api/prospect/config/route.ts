@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
+import { canAccessSession } from "@/lib/api-auth";
 
 export async function GET() {
     try {
@@ -68,6 +69,10 @@ export async function POST(req: Request) {
             aiEnabled,
             notifyPhone,
         } = body;
+
+        if (sessionId && !(await canAccessSession(session.user.id, session.user.role as string, sessionId))) {
+            return NextResponse.json({ error: "Você não tem acesso a esse WhatsApp" }, { status: 403 });
+        }
 
         const updated = await prisma.prospectConfig.upsert({
             where: { userId: session.user.id },

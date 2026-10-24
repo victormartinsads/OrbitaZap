@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
 import { createLeadSchema } from "@/lib/validations";
+import { findOwnedStage, invalidStageResponse } from "@/lib/crm-ownership";
 
 export async function GET(req: Request) {
     try {
@@ -63,6 +64,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
         }
         const { pipelineId, stageId, name, phone, email, company, jobTitle, value, priority, source, campaignName, notes, tags, customFields } = parsed.data;
+
+        if (!(await findOwnedStage(session.user.id, stageId, pipelineId))) return invalidStageResponse();
 
         // Sanitizar telefone e criar remoteJid se fornecido
         const cleanPhone = phone ? phone.replace(/\D/g, "") : null;

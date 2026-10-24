@@ -2,6 +2,14 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
+import { findOwnedStage, invalidStageResponse } from "@/lib/crm-ownership";
+
+const PROVIDERS = ["META_ADS", "GOOGLE_SHEETS", "WEBHOOK"];
+
+// Secrets stay on the server; the UI only needs to know whether they are set.
+function withoutSecrets<T extends { accessToken: string | null; appSecret: string | null }>({ accessToken, appSecret, ...rest }: T) {
+    return { ...rest, hasAccessToken: !!accessToken, hasAppSecret: !!appSecret };
+}
 
 export async function GET() {
     try {
@@ -12,10 +20,10 @@ export async function GET() {
 
         const configs = await prisma.crmIntegrationConfig.findMany({
             where: { userId: session.user.id },
-            orderBy: { createdAt: "desc" }
+            orderBy: { createdAt: "desc" },
         });
 
-        return NextResponse.json({ configs });
+        return NextResponse.json({ configs: configs.map(withoutSecrets) });
     } catch (error) {
         return apiError(error);
     }
@@ -29,10 +37,20 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { provider, name, verifyToken, accessToken, targetPipelineId, targetStageId, autoAssignTag } = body;
+        const { provider, name, verifyToken, accessToken, appSecret, targetPipelineId, targetStageId, autoAssignTag } = body;
 
-        if (!provider || !name) {
-            return NextResponse.json({ error: "Provedor e Nome são obrigatórios" }, { status: 400 });
+        if (!PROVIDERS.includes(provider) || !name) {
+            return NextResponse.json({ error: "Provedor inválido ou nome ausente" }, { status: 400 });
+        }
+        if (provider === "META_ADS" && !verifyToken) {
+            return NextResponse.json({ error: "Informe o Verify Token da Meta" }, { status: 400 });
+        }
+        if (targetStageId && !(await findOwnedStage(session.user.id, targetStageId, targetPipelineId))) {
+            return invalidStageResponse();
+        }
+        if (targetPipelineId && !targetStageId) {
+            const pipeline = await prisma.crmPipeline.findFirst({ where: { id: targetPipelineId, userId: session.user.id } });
+            if (!pipeline) return invalidStageResponse();
         }
 
         const config = await prisma.crmIntegrationConfig.create({
@@ -40,15 +58,16 @@ export async function POST(req: Request) {
                 userId: session.user.id,
                 provider,
                 name,
-                verifyToken,
-                accessToken,
-                targetPipelineId,
-                targetStageId,
+                verifyToken: verifyToken || null,
+                accessToken: accessToken || null,
+                appSecret: appSecret || null,
+                targetPipelineId: targetPipelineId || null,
+                targetStageId: targetStageId || null,
                 autoAssignTag
-            }
+            },
         });
 
-        return NextResponse.json({ config });
+        return NextResponse.json({ config: withoutSecrets(config) });
     } catch (error) {
         return apiError(error);
     }

@@ -29,7 +29,7 @@ import { LeadDetailSheet } from "@/components/crm/lead-detail-sheet";
 import { NewLeadModal } from "@/components/crm/new-lead-modal";
 import { ImportLeadsModal } from "@/components/crm/import-leads-modal";
 import { IntegrationsModal } from "@/components/crm/integrations-modal";
-import { Upload } from "lucide-react";
+import { Upload, Plug } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -283,6 +283,16 @@ export default function CRMPage() {
 
                     <Button
                         size="sm"
+                        variant="outline"
+                        onClick={() => setIsIntegrationsOpen(true)}
+                        className="h-9 rounded-xl border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 gap-1.5"
+                    >
+                        <Plug size={14} className="text-[#00bcfe]" />
+                        Integrações
+                    </Button>
+
+                    <Button
+                        size="sm"
                         onClick={() => setIsNewLeadOpen(true)}
                         className="h-9 rounded-xl bg-[#00bcfe] hover:bg-[#0084cc] text-white text-xs font-semibold gap-1.5 shadow-2xs"
                     >
@@ -473,8 +483,6 @@ export default function CRMPage() {
             <IntegrationsModal
                 isOpen={isIntegrationsOpen}
                 onClose={() => setIsIntegrationsOpen(false)}
-                configs={[]}
-                onRefresh={() => {}}
             />
         </div>
     );

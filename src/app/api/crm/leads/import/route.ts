@@ -2,6 +2,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
+import { findOwnedStage, invalidStageResponse } from "@/lib/crm-ownership";
 
 export async function POST(req: Request) {
     try {
@@ -16,6 +17,7 @@ export async function POST(req: Request) {
         if (!pipelineId || !stageId) {
             return NextResponse.json({ error: "Funil e etapa de destino são obrigatórios" }, { status: 400 });
         }
+        if (!(await findOwnedStage(session.user.id, stageId, pipelineId))) return invalidStageResponse();
 
         if (!Array.isArray(leads) || leads.length === 0) {
             return NextResponse.json({ error: "Nenhum lead fornecido para importação" }, { status: 400 });

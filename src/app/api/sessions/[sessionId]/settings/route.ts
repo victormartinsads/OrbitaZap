@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse, NextRequest } from "next/server";
 import { waManager } from "@/modules/whatsapp/manager";
-import { getAuthenticatedUser, canAccessSession, isAdmin } from "@/lib/api-auth";
+import { getAuthenticatedUser, canAccessSession, isAdmin, isSessionOwner } from "@/lib/api-auth";
 
 // GET: Retrieve session settings
 export async function GET(
@@ -91,10 +91,10 @@ export async function DELETE(
             return NextResponse.json({ status: false, message: "Unauthorized", error: "Unauthorized" }, { status: 401 });
         }
 
-        // Check if user can access this session
-        const canAccess = await canAccessSession(user.id, user.role, sessionId);
-        if (!canAccess) {
-            return NextResponse.json({ status: false, message: "Forbidden - Cannot delete this session", error: "Forbidden - Cannot delete this session" }, { status: 403 });
+        // Only the owner may delete; shared collaborators can't
+        const isOwner = await isSessionOwner(user.id, user.role, sessionId);
+        if (!isOwner) {
+            return NextResponse.json({ status: false, message: "Forbidden - Only the owner can delete this session", error: "Forbidden - Only the owner can delete this session" }, { status: 403 });
         }
 
         // Disconnect WhatsApp session first
@@ -106,12 +106,8 @@ export async function DELETE(
                 console.log("Session logout error (might be already disconnected):", e);
             }
         }
-        waManager.deleteSession(sessionId);
-
-        // Delete from database
-        await prisma.session.delete({
-            where: { sessionId }
-        });
+        // Also removes the database row
+        await waManager.deleteSession(sessionId);
 
         return NextResponse.json({ status: true, message: "Session deleted successfully" });
 

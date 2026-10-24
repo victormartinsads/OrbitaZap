@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { waManager } from "@/modules/whatsapp/manager";
-import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
+import { getAuthenticatedUser, canAccessSession, isSessionOwner } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
 import { assertSessionOwnerActive } from "@/lib/billing/access";
@@ -29,6 +29,10 @@ export async function POST(
         const validActions = ["start", "stop", "restart", "logout", "pair"];
         if (!validActions.includes(action)) {
             return NextResponse.json({ status: false, message: "Invalid action", error: "Invalid action" }, { status: 400 });
+        }
+
+        if (action === "logout" && !(await isSessionOwner(user.id, user.role, sessionId))) {
+            return NextResponse.json({ status: false, message: "Only the session owner can log out", error: "Only the session owner can log out" }, { status: 403 });
         }
 
         if (action === "start" || action === "restart" || action === "pair") {

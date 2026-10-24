@@ -4,7 +4,6 @@ import { SessionProvider } from "@/components/dashboard/session-provider";
 import { SidebarProvider } from "@/components/dashboard/sidebar-context";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { UpdateChecker } from "@/components/dashboard/update-checker";
-import { RegistrationWarning } from "@/components/dashboard/registration-warning";
 import { prisma } from "@/lib/prisma";
 import { Toaster } from "sonner";
 import { getBillingState } from "@/lib/billing/access";
@@ -23,7 +22,6 @@ export default async function DashboardLayout({
     // @ts-ignore
     const systemConfig = await prisma.systemConfig.findUnique({ where: { id: "default" } });
     const appName = systemConfig?.appName || "OrbitaZap";
-    const registrationEnabled = systemConfig?.enableRegistration ?? true;
 
     const billing = session?.user?.id
         ? await getBillingState(session.user.id, session.user.role as string)
@@ -37,10 +35,6 @@ export default async function DashboardLayout({
         <SessionProvider>
             <SidebarProvider>
                 <UpdateChecker />
-                <RegistrationWarning
-                    role={session?.user?.role as string}
-                    registrationEnabled={registrationEnabled}
-                />
                 <div className="flex h-screen bg-background relative overflow-hidden" suppressHydrationWarning={true}>
                     {/* Sidebar */}
                     <SidebarShell

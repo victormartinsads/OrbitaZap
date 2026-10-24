@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
+import { hit, MINUTE } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
     try {
@@ -21,6 +22,9 @@ export async function POST(req: Request) {
 
         if (!integration) {
             return NextResponse.json({ error: "Integração do Google Sheets não encontrada ou inativa" }, { status: 404 });
+        }
+        if (!hit(`crm-webhook:${token}`, 120, MINUTE).allowed) {
+            return NextResponse.json({ error: "Too many requests" }, { status: 429 });
         }
 
         const body = await req.json();

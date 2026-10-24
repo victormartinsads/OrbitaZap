@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readdir, stat, unlink } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
-import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
+import { getAuthenticatedUser, canAccessSession, isAdmin } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 
 // Media directory — private, NOT in public/
@@ -171,13 +171,13 @@ export async function DELETE(request: NextRequest) {
             }
 
             const parsed = parseFilename(filename);
-            if (parsed) {
-                const canAccess = await canAccessSession(user.id, user.role, parsed.sessionId);
-                if (!canAccess) {
-                    errors.push(`Forbidden: ${filename}`);
-                    failed++;
-                    continue;
-                }
+            const canAccess = parsed
+                ? await canAccessSession(user.id, user.role, parsed.sessionId)
+                : isAdmin(user.role);
+            if (!canAccess) {
+                errors.push(`Forbidden: ${filename}`);
+                failed++;
+                continue;
             }
 
             const filePath = path.join(MEDIA_DIR, filename);

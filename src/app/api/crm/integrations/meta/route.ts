@@ -1,140 +1,152 @@
 ﻿import { NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-error";
+import { hit, MINUTE } from "@/lib/rate-limit";
 
-// Handler GET: Validação do Meta Webhook
+async function findIntegration(req: Request) {
+    const token = new URL(req.url).searchParams.get("token");
+    if (!token) return null;
+    return prisma.crmIntegrationConfig.findFirst({
+        where: { webhookToken: token, provider: "META_ADS", isActive: true },
+    });
+}
+
+function validSignature(rawBody: string, header: string | null, appSecret: string) {
+    if (!header?.startsWith("sha256=")) return false;
+    const expected = Buffer.from(createHmac("sha256", appSecret).update(rawBody).digest("hex"));
+    const received = Buffer.from(header.slice("sha256=".length));
+    return expected.length === received.length && timingSafeEqual(expected, received);
+}
+
+// Handshake de verificação do Meta Developers
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
-    const mode = searchParams.get("hub.mode");
-    const token = searchParams.get("hub.verify_token");
-    const challenge = searchParams.get("hub.challenge");
+    const integration = await findIntegration(req);
 
-    // Procura uma integração com o verifyToken correspondente
-    if (mode === "subscribe" && token) {
-        const integration = await prisma.crmIntegrationConfig.findFirst({
-            where: {
-                provider: "META_ADS",
-                verifyToken: token,
-                isActive: true
-            }
-        });
-
-        if (integration) {
-            return new Response(challenge, { status: 200 });
-        }
+    if (
+        integration?.verifyToken &&
+        searchParams.get("hub.mode") === "subscribe" &&
+        searchParams.get("hub.verify_token") === integration.verifyToken
+    ) {
+        return new Response(searchParams.get("hub.challenge"), { status: 200 });
     }
-
     return NextResponse.json({ error: "Verification failed" }, { status: 403 });
 }
 
-// Handler POST: Recebimento do evento de Leadgen do Meta (Facebook/Instagram)
+// Eventos de Leadgen do Meta (Facebook/Instagram)
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const integration = await findIntegration(req);
+        if (!integration) {
+            return NextResponse.json({ error: "Integração não encontrada ou inativa" }, { status: 404 });
+        }
+        if (!hit(`crm-webhook:${integration.webhookToken}`, 120, MINUTE).allowed) {
+            return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+        }
 
-        // Estrutura padrão do Webhook Meta Lead Ads
-        // body.entry[].changes[].value.leadgen_id
-        if (body.object === "page" && Array.isArray(body.entry)) {
-            for (const entry of body.entry) {
-                if (Array.isArray(entry.changes)) {
-                    for (const change of entry.changes) {
-                        if (change.field === "leadgen") {
-                            const value = change.value;
-                            const leadgenId = value.leadgen_id;
-                            const pageId = value.page_id;
-                            const formId = value.form_id;
+        const rawBody = await req.text();
+        if (integration.appSecret && !validSignature(rawBody, req.headers.get("x-hub-signature-256"), integration.appSecret)) {
+            return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+        }
 
-                            // Localizar integração ativa
-                            const integration = await prisma.crmIntegrationConfig.findFirst({
-                                where: {
-                                    provider: "META_ADS",
-                                    isActive: true
-                                }
-                            });
+        let body: any;
+        try {
+            body = JSON.parse(rawBody);
+        } catch {
+            return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+        }
 
-                            if (!integration) continue;
+        if (body.object !== "page" || !Array.isArray(body.entry)) {
+            return NextResponse.json({ success: true });
+        }
 
-                            let leadData: any = {
-                                name: "Lead Meta Ads",
-                                phone: null,
-                                email: null,
-                                formFields: {}
-                            };
+        for (const entry of body.entry) {
+            if (!Array.isArray(entry.changes)) continue;
+            for (const change of entry.changes) {
+                if (change.field !== "leadgen") continue;
 
-                            // Se houver Access Token cadastrado, busca detalhes reais do Lead na Graph API da Meta
-                            if (integration.accessToken) {
-                                try {
-                                    const metaRes = await fetch(
-                                        `https://graph.facebook.com/v21.0/${leadgenId}?access_token=${integration.accessToken}`
-                                    );
-                                    if (metaRes.ok) {
-                                        const metaJson = await metaRes.json();
-                                        if (Array.isArray(metaJson.field_data)) {
-                                            for (const field of metaJson.field_data) {
-                                                const fieldName = (field.name || "").toLowerCase();
-                                                const val = field.values?.[0] || "";
+                const value = change.value ?? {};
+                const leadgenId = String(value.leadgen_id ?? "");
+                const formId = value.form_id;
+                if (!/^\d+$/.test(leadgenId)) continue;
 
-                                                if (fieldName.includes("name") || fieldName.includes("nome")) {
-                                                    leadData.name = val;
-                                                } else if (fieldName.includes("phone") || fieldName.includes("telefone") || fieldName.includes("whats")) {
-                                                    leadData.phone = val;
-                                                } else if (fieldName.includes("email")) {
-                                                    leadData.email = val;
-                                                }
-                                                leadData.formFields[field.name] = val;
-                                            }
-                                        }
+                const leadData: { name: string; phone: string | null; email: string | null; formFields: Record<string, string> } = {
+                    name: "Lead Meta Ads",
+                    phone: null,
+                    email: null,
+                    formFields: {},
+                };
+
+                if (integration.accessToken) {
+                    try {
+                        const metaRes = await fetch(
+                            `https://graph.facebook.com/v21.0/${leadgenId}?access_token=${encodeURIComponent(integration.accessToken)}`
+                        );
+                        if (metaRes.ok) {
+                            const metaJson = await metaRes.json();
+                            if (Array.isArray(metaJson.field_data)) {
+                                for (const field of metaJson.field_data) {
+                                    const fieldName = (field.name || "").toLowerCase();
+                                    const val = field.values?.[0] || "";
+
+                                    if (fieldName.includes("name") || fieldName.includes("nome")) {
+                                        leadData.name = val;
+                                    } else if (fieldName.includes("phone") || fieldName.includes("telefone") || fieldName.includes("whats")) {
+                                        leadData.phone = val;
+                                    } else if (fieldName.includes("email")) {
+                                        leadData.email = val;
                                     }
-                                } catch (e) {
-                                    console.error("Erro ao buscar dados na Graph API:", e);
+                                    leadData.formFields[field.name] = val;
                                 }
                             }
+                        }
+                    } catch (e) {
+                        console.error("Erro ao buscar dados na Graph API:", e);
+                    }
+                }
 
-                            // Achar etapa de destino
-                            let pipelineId = integration.targetPipelineId;
-                            let stageId = integration.targetStageId;
+                let pipelineId = integration.targetPipelineId;
+                let stageId = integration.targetStageId;
 
-                            if (!pipelineId || !stageId) {
-                                const defaultPipeline = await prisma.crmPipeline.findFirst({
-                                    where: { userId: integration.userId },
-                                    include: { stages: { orderBy: { order: "asc" }, take: 1 } }
-                                });
-                                if (defaultPipeline && defaultPipeline.stages.length > 0) {
-                                    pipelineId = defaultPipeline.id;
-                                    stageId = defaultPipeline.stages[0].id;
-                                }
-                            }
+                if (!pipelineId || !stageId) {
+                    const defaultPipeline = await prisma.crmPipeline.findFirst({
+                        where: { userId: integration.userId },
+                        include: { stages: { orderBy: { order: "asc" }, take: 1 } }
+                    });
+                    if (defaultPipeline && defaultPipeline.stages.length > 0) {
+                        pipelineId = defaultPipeline.id;
+                        stageId = defaultPipeline.stages[0].id;
+                    }
+                }
 
-                            if (pipelineId && stageId) {
-                                const cleanPhone = leadData.phone ? leadData.phone.replace(/\D/g, "") : null;
-                                const remoteJid = cleanPhone ? `${cleanPhone}@s.whatsapp.net` : null;
+                if (!pipelineId || !stageId) continue;
 
-                                await prisma.crmLead.create({
-                                    data: {
-                                        userId: integration.userId,
-                                        pipelineId,
-                                        stageId,
-                                        name: leadData.name,
-                                        phone: cleanPhone,
-                                        remoteJid,
-                                        email: leadData.email,
-                                        source: "META_ADS",
-                                        campaignName: value.adgroup_id ? `AdGroup ${value.adgroup_id}` : "Meta Lead Ads",
-                                        tags: "Meta Ads,Form Nativo",
-                                        customFields: leadData.formFields,
-                                        activities: {
-                                            create: {
-                                                type: "WEBHOOK_IN",
-                                                title: "Lead Capturado via Meta Ads",
-                                                content: `Formulário ID: ${formId} | Leadgen ID: ${leadgenId}`
-                                            }
-                                        }
-                                    }
-                                });
+                const cleanPhone = leadData.phone ? leadData.phone.replace(/\D/g, "") : null;
+                const remoteJid = cleanPhone ? `${cleanPhone}@s.whatsapp.net` : null;
+
+                await prisma.crmLead.create({
+                    data: {
+                        userId: integration.userId,
+                        pipelineId,
+                        stageId,
+                        name: leadData.name,
+                        phone: cleanPhone,
+                        remoteJid,
+                        email: leadData.email,
+                        source: "META_ADS",
+                        campaignName: value.adgroup_id ? `AdGroup ${value.adgroup_id}` : "Meta Lead Ads",
+                        tags: "Meta Ads,Form Nativo",
+                        customFields: leadData.formFields,
+                        activities: {
+                            create: {
+                                type: "WEBHOOK_IN",
+                                title: "Lead Capturado via Meta Ads",
+                                content: `Formulário ID: ${formId} | Leadgen ID: ${leadgenId}`
                             }
                         }
                     }
-                }
+                });
             }
         }
 

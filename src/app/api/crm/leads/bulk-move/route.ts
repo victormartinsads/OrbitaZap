@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendFirstContactToLead } from "@/modules/prospect/crm-trigger";
 import { apiError } from "@/lib/api-error";
+import { findOwnedStage, invalidStageResponse } from "@/lib/crm-ownership";
 
 export async function POST(req: Request) {
     try {
@@ -22,13 +23,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Etapa de destino obrigatória." }, { status: 400 });
         }
 
-        const targetStage = await prisma.crmPipelineStage.findUnique({
-            where: { id: targetStageId },
-        });
-
-        if (!targetStage) {
-            return NextResponse.json({ error: "Etapa não encontrada." }, { status: 404 });
-        }
+        const targetStage = await findOwnedStage(session.user.id, targetStageId);
+        if (!targetStage) return invalidStageResponse();
 
         const isFirstContactStage = targetStage.autoFirstContact === true;
 
@@ -37,7 +33,7 @@ export async function POST(req: Request) {
 
         for (const leadId of leadIds) {
             const currentLead = await prisma.crmLead.findFirst({
-                where: { id: leadId, userId: session.user.id },
+                where: { id: leadId, userId: session.user.id, pipelineId: targetStage.pipelineId },
                 include: { stage: true },
             });
 

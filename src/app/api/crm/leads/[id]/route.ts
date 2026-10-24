@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendFirstContactToLead } from "@/modules/prospect/crm-trigger";
 import { apiError } from "@/lib/api-error";
 import { patchLeadSchema } from "@/lib/validations";
+import { findOwnedStage, invalidStageResponse } from "@/lib/crm-ownership";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -67,8 +68,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
         let newStage = null;
         if (body.stageId && body.stageId !== currentLead.stageId) {
+            newStage = await findOwnedStage(session.user.id, body.stageId, currentLead.pipelineId);
+            if (!newStage) return invalidStageResponse();
             updateData.stageId = body.stageId;
-            newStage = await prisma.crmPipelineStage.findUnique({ where: { id: body.stageId } });
             activitiesToCreate.push({
                 userId: session.user.id,
                 type: "STAGE_CHANGE",

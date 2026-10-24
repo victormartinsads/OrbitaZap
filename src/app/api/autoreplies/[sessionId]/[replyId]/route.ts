@@ -25,6 +25,11 @@ export async function PUT(
             return NextResponse.json({ status: false, message: "Keyword and either response or media are required", error: "Keyword and response are required" }, { status: 400 });
         }
 
+        const rule = await prisma.autoReply.findUnique({ where: { id: replyId }, include: { session: true } });
+        if (!rule || (rule.session.sessionId !== sessionId && rule.session.id !== sessionId)) {
+            return NextResponse.json({ status: false, message: "Rule not found in this session", error: "Rule not found in this session" }, { status: 404 });
+        }
+
         const updated = await prisma.autoReply.update({
             where: { id: replyId },
             data: {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
-import { getAuthenticatedUser, canAccessSession } from "@/lib/api-auth";
+import { getAuthenticatedUser, canAccessSession, isAdmin } from "@/lib/api-auth";
 
 // Media directory — private, NOT in public/
 const MEDIA_DIR = path.join(process.cwd(), "data", "media");
@@ -40,12 +40,13 @@ export async function GET(
         }
 
         // Session ownership check — extract sessionId from filename
+        // Files without a session in the name have no owner to check against: superadmin only
         const sessionId = extractSessionId(filename);
-        if (sessionId) {
-            const canAccess = await canAccessSession(user.id, user.role, sessionId);
-            if (!canAccess) {
-                return NextResponse.json({ status: false, message: "Forbidden - Cannot access this session's media", error: "Forbidden - Cannot access this session's media" }, { status: 403 });
-            }
+        const canAccess = sessionId
+            ? await canAccessSession(user.id, user.role, sessionId)
+            : isAdmin(user.role);
+        if (!canAccess) {
+            return NextResponse.json({ status: false, message: "Forbidden - Cannot access this session's media", error: "Forbidden - Cannot access this session's media" }, { status: 403 });
         }
 
         const filePath = path.join(MEDIA_DIR, filename);

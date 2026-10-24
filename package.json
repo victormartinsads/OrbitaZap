@@ -14,6 +14,7 @@
     "db:studio": "prisma studio",
     "db:seed-plans": "npx tsx prisma/seed-plans.ts",
     "db:backfill-subscriptions": "npx tsx prisma/backfill-subscriptions.ts",
+    "db:backfill-account-security": "npx tsx prisma/backfill-account-security.ts",
     "make-admin": "node scripts/setup-admin.js",
     "postinstall": "patch-package"
   },

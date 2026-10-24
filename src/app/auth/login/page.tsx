@@ -28,6 +28,12 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const notice =
+    searchParams.get('reset') ? "Senha alterada. Entre com a nova senha." :
+    searchParams.get('verified') ? "E-mail confirmado. Entre para continuar." :
+    searchParams.get('registered') ? "Conta criada! Enviamos um link para confirmar seu e-mail." :
+    null;
+  const verifyError = searchParams.get('verify_error');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -49,7 +55,9 @@ function LoginForm() {
         password: values.password,
       });
 
-      if (result?.error) {
+      if (result?.code === "rate_limited") {
+        setError("Muitas tentativas. Tente de novo em alguns minutos ou redefina sua senha.");
+      } else if (result?.error) {
         setError("E-mail ou senha inválidos");
       } else {
         window.location.href = callbackUrl;
@@ -78,6 +86,16 @@ function LoginForm() {
         </div>
 
         <div className="glass-panel rounded-3xl p-8 shadow-2xl shadow-black/5 dark:shadow-black/40">
+          {notice && !error && (
+            <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-sm text-center font-medium">
+              {notice}
+            </div>
+          )}
+          {verifyError && !error && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-sm text-center font-medium">
+              Este link de confirmação é inválido ou expirou. Entre e peça um novo pelo painel.
+            </div>
+          )}
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in shake duration-300">
               {error}
@@ -108,7 +126,12 @@ function LoginForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Senha</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-foreground/80">Senha</FormLabel>
+                      <Link href="/auth/forgot-password" className="text-xs font-medium text-primary hover:text-primary/80">
+                        Esqueci minha senha
+                      </Link>
+                    </div>
                     <FormControl>
                       <Input
                         type="password"

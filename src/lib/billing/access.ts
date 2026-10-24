@@ -5,13 +5,22 @@ const DAY = 24 * 60 * 60 * 1000;
 export const TRIAL_DAYS = parseInt(process.env.TRIAL_DAYS || "7", 10);
 export const GRACE_DAYS = parseInt(process.env.BILLING_GRACE_DAYS || "3", 10);
 
-export type BillingErrorCode = "SUBSCRIPTION_INACTIVE" | "PLAN_LIMIT";
+export type BillingErrorCode = "SUBSCRIPTION_INACTIVE" | "PLAN_LIMIT" | "EMAIL_NOT_VERIFIED";
 
 export class BillingError extends Error {
-    status = 402;
+    status: number;
     constructor(public code: BillingErrorCode, message: string) {
         super(message);
         this.name = "BillingError";
+        this.status = code === "EMAIL_NOT_VERIFIED" ? 403 : 402;
+    }
+}
+
+export async function assertEmailVerified(userId: string, role?: string) {
+    if (role === "SUPERADMIN") return;
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { emailVerifiedAt: true } });
+    if (!user?.emailVerifiedAt) {
+        throw new BillingError("EMAIL_NOT_VERIFIED", "Confirme seu e-mail para continuar. Enviamos o link no cadastro; você pode reenviar pelo aviso no topo.");
     }
 }
 
@@ -114,6 +123,7 @@ export async function assertSessionOwnerActive(sessionId: string) {
 }
 
 export async function assertCanCreateSession(userId: string, role?: string) {
+    await assertEmailVerified(userId, role);
     const state = await assertActive(userId, role);
     const used = await prisma.session.count({ where: { userId } });
     if (used >= state.maxSessions) {

@@ -1,4 +1,6 @@
+import { randomBytes } from "crypto";
 import { prisma } from "./prisma";
+import { sha256 } from "./tokens";
 import { NextRequest } from "next/server";
 import { auth } from "./auth";
 import { logger } from "./logger";
@@ -24,7 +26,7 @@ export async function validateApiKey(request: NextRequest) {
 
     try {
         const user = await prisma.user.findUnique({
-            where: { apiKey },
+            where: { apiKey: sha256(apiKey) },
             select: { id: true, email: true, name: true, role: true }
         });
 
@@ -245,14 +247,6 @@ export async function getAccessibleSessions(userId: string, userRole: string) {
     return [...ownedSessions, ...sharedSessions];
 }
 
-/**
- * Generate a new API key
- */
 export function generateApiKey(): string {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "wag_"; // Prefix for easy identification
-    for (let i = 0; i < 32; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return "wag_" + randomBytes(24).toString("base64url");
 }

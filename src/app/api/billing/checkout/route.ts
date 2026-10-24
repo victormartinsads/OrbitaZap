@@ -4,12 +4,19 @@ import { apiError } from "@/lib/api-error";
 import { billingCheckoutSchema } from "@/lib/validations";
 import { AsaasError } from "@/lib/billing/asaas";
 import { BillingRequestError, checkout } from "@/lib/billing/service";
+import { assertEmailVerified } from "@/lib/billing/access";
 
 export async function POST(req: NextRequest) {
     try {
         const user = await getAuthenticatedUser(req);
         if (!user || user.authMethod !== "session") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        try {
+            await assertEmailVerified(user.id, user.role);
+        } catch (e) {
+            return apiError(e);
         }
 
         const parsed = billingCheckoutSchema.safeParse(await req.json());

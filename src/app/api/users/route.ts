@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
                 email,
                 password: hashedPassword,
                 role: role as any,
+                emailVerifiedAt: new Date(),
                 ...(role !== "SUPERADMIN" && {
                     subscription: { create: { planId: "starter", status: "TRIALING", trialEndsAt: trialEndDate() } },
                 }),

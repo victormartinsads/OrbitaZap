@@ -107,6 +107,10 @@ export function SessionManager({ user }: { user: any }) {
             const responseData = await res.json();
             const session = responseData?.data;
 
+            if (responseData?.code === "EMAIL_NOT_VERIFIED") {
+                toast.error(responseData.error, { duration: 8000 });
+                return;
+            }
             if (res.status === 402) {
                 toast.error(responseData.error, {
                     action: { label: "Fazer upgrade", onClick: () => router.push("/dashboard/billing") },

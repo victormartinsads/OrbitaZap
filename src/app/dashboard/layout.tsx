@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { getBillingState } from "@/lib/billing/access";
 import { BillingBanner } from "@/components/dashboard/billing-banner";
 import { BillingGate } from "@/components/dashboard/billing-gate";
+import { VerifyEmailBanner } from "@/components/dashboard/verify-email-banner";
 import pkg from "../../../package.json";
 
 
@@ -27,6 +28,10 @@ export default async function DashboardLayout({
     const billing = session?.user?.id
         ? await getBillingState(session.user.id, session.user.role as string)
         : null;
+    const account = session?.user?.id
+        ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true, emailVerifiedAt: true, role: true } })
+        : null;
+    const needsEmailVerification = !!account && !account.emailVerifiedAt && account.role !== "SUPERADMIN";
 
     return (
         <SessionProvider>
@@ -47,6 +52,7 @@ export default async function DashboardLayout({
 
                     {/* Main Content */}
                     <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative z-10" suppressHydrationWarning={true}>
+                        {needsEmailVerification && <VerifyEmailBanner email={account!.email} />}
                         {billing && (
                             <BillingBanner reason={billing.reason} daysLeft={billing.daysLeft} deadline={billing.deadline} />
                         )}

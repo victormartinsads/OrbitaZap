@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Plus, Copy, RefreshCw, Webhook, Key, Eye, EyeOff, Play, History, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Trash2, Plus, Copy, RefreshCw, Webhook, Key, Play, History, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
     AlertDialog,
@@ -76,8 +76,9 @@ import { useSession } from "@/components/dashboard/session-provider";
 export default function WebhooksPage() {
     const { sessionId, sessions } = useSession();
     const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
-    const [apiKey, setApiKey] = useState<string | null>(null);
-    const [showApiKey, setShowApiKey] = useState(false);
+    const [keyPrefix, setKeyPrefix] = useState<string | null>(null);
+    const [hasKey, setHasKey] = useState(false);
+    const [newApiKey, setNewApiKey] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [showRegenConfirm, setShowRegenConfirm] = useState(false);
 
@@ -133,7 +134,8 @@ export default function WebhooksPage() {
             const res = await fetch("/api/user/api-key");
             if (res.ok) {
                 const data = await res.json();
-                setApiKey(data?.data?.apiKey);
+                setHasKey(!!data?.data?.hasKey);
+                setKeyPrefix(data?.data?.prefix ?? null);
             }
         } catch (error) {
             console.error("Failed to fetch API key", error);
@@ -145,8 +147,10 @@ export default function WebhooksPage() {
             const res = await fetch("/api/user/api-key", { method: "POST" });
             if (res.ok) {
                 const data = await res.json();
-                setApiKey(data?.data?.apiKey);
-                toast.success("Nova chave de API gerada!");
+                setNewApiKey(data?.data?.apiKey);
+                setKeyPrefix(data?.data?.prefix ?? null);
+                setHasKey(true);
+                toast.success("Nova chave de API gerada! Copie agora.");
             }
         } catch (error) {
             toast.error("Falha ao gerar a chave de API");
@@ -360,33 +364,35 @@ export default function WebhooksPage() {
                 <CardContent>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                         <div className="flex-1 bg-slate-100 rounded-md p-2 sm:p-3 font-mono text-xs sm:text-sm overflow-x-auto">
-                            {apiKey ? (
-                                showApiKey ? apiKey : "••••••••••••••••••••••••••••••••"
+                            {newApiKey ? (
+                                newApiKey
+                            ) : hasKey ? (
+                                `${keyPrefix ?? "wag_"}••••••••••••••••••••••••`
                             ) : (
                                 <span className="text-muted-foreground">Nenhuma chave de API gerada</span>
                             )}
                         </div>
-                        {apiKey && (
-                            <>
-                                <Button variant="ghost" size="icon" onClick={() => setShowApiKey(!showApiKey)}>
-                                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => copyToClipboard(apiKey)}>
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                            </>
+                        {newApiKey && (
+                            <Button variant="ghost" size="icon" onClick={() => copyToClipboard(newApiKey)}>
+                                <Copy className="h-4 w-4" />
+                            </Button>
                         )}
                         <Button onClick={() => {
-                            if (apiKey) setShowRegenConfirm(true);
+                            if (hasKey) setShowRegenConfirm(true);
                             else generateNewApiKey();
                         }}>
                             <RefreshCw className="h-4 w-4 mr-2" />
-                            {apiKey ? "Gerar novamente" : "Gerar"}
+                            {hasKey ? "Gerar nova chave" : "Gerar"}
                         </Button>
                     </div>
-                    {apiKey && (
+                    {newApiKey && (
+                        <p className="text-xs font-medium text-amber-700 mt-2">
+                            Guarde esta chave agora: por segurança, ela não será mostrada de novo.
+                        </p>
+                    )}
+                    {hasKey && (
                         <p className="text-xs text-muted-foreground mt-2">
-                            Exemplo: <code className="bg-slate-100 px-1 py-0.5 rounded">curl -H "X-API-Key: {apiKey?.slice(0, 10)}..." http://your-server/api/sessions</code>
+                            Exemplo: <code className="bg-slate-100 px-1 py-0.5 rounded">curl -H "X-API-Key: {keyPrefix ?? "wag_"}..." https://seu-dominio.com/api/sessions</code>
                         </p>
                     )}
                 </CardContent>

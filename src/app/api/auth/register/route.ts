@@ -3,44 +3,38 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { trialEndDate } from "@/lib/billing/access";
+import { clientIp, hit, HOUR } from "@/lib/rate-limit";
+import { sendVerificationEmail } from "@/lib/account";
 
 const registerSchema = z.object({
-    name: z.string().min(2),
-    email: z.string().email(),
-    password: z.string().min(6),
+    name: z.string().trim().min(2),
+    email: z.string().trim().toLowerCase().email(),
+    password: z.string().min(8),
 });
 
 export async function POST(req: Request) {
     try {
+        if (!hit(`register:ip:${clientIp(req.headers)}`, 5, HOUR).allowed) {
+            return NextResponse.json({ error: "Muitos cadastros a partir desta rede. Tente de novo mais tarde." }, { status: 429 });
+        }
+
         const body = await req.json();
         const { email, password, name } = registerSchema.parse(body);
 
-        // Check if registration is enabled
         const systemConfig = await prisma.systemConfig.findUnique({ where: { id: "default" } });
-        // @ts-ignore
         if (systemConfig && systemConfig.enableRegistration === false) {
-            return NextResponse.json(
-                { error: "Registration is currently disabled by the administrator" },
-                { status: 403 }
-            );
+            return NextResponse.json({ error: "O cadastro está desativado pelo administrador." }, { status: 403 });
         }
 
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
+        const existingUser = await prisma.user.findFirst({
+            where: { email: { equals: email, mode: "insensitive" } },
         });
-
         if (existingUser) {
-            return NextResponse.json(
-                { error: "User with this email already exists" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Já existe uma conta com este e-mail." }, { status: 400 });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the user
         const newUser = await prisma.user.create({
             data: {
                 name,
@@ -52,6 +46,9 @@ export async function POST(req: Request) {
             },
         });
 
+        // A falha no envio não impede o cadastro: o usuário pode reenviar pelo painel.
+        await sendVerificationEmail(newUser).catch(e => console.error("Verification email error:", e));
+
         return NextResponse.json({
             success: true,
             message: "User registered successfully",
@@ -60,15 +57,12 @@ export async function POST(req: Request) {
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { error: "Invalid registration data provided" },
+                { error: "Dados inválidos. A senha precisa ter pelo menos 8 caracteres." },
                 { status: 400 }
             );
         }
 
         console.error("Registration error:", error);
-        return NextResponse.json(
-            { error: "Internal server error during registration" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Erro interno ao criar a conta." }, { status: 500 });
     }
 }
